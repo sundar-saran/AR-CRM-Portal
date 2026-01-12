@@ -1,0 +1,133 @@
+﻿@model CRM_Buddies_Task.Models.ProjectModel
+
+@{
+    ViewBag.Title = "Add Project";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            padding: 20px 30px;
+            border-radius: 12px 12px 0 0;
+            color: #fff;
+        }
+
+        body.dark-theme .page-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+        }
+
+        @@keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Fade In */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-success:hover {
+            background-color: #198754;
+            box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
+        }
+
+        .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #212529;
+        }
+    </style>
+}
+
+<div class="container mt-5 fade-in">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card shadow border-0">
+                <div class="page-header">
+                    <h4 class="mb-0"><i class="bi bi-folder-plus me-2"></i> Add New Project</h4>
+                </div>
+
+                <div class="card-body">
+                    @using (Html.BeginForm("AddProject", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.ProjectName, new { @class = "form-label fw-semibold" })
+                            @Html.TextBoxFor(m => m.ProjectName, new { @class = "form-control", placeholder = "Enter project name", required = "required" })
+                            @Html.ValidationMessageFor(m => m.ProjectName, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.Description, new { @class = "form-label fw-semibold" })
+                            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 5, placeholder = "Project description...", required = "required" })
+                            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i> Add Project
+                            </button>
+                            <a href="@Url.Action("AllProjects", "Account")" class="btn btn-outline-warning ms-2 text-dark">
+                                <i class="bi bi-arrow-left-circle me-1 text-dark"></i> Back
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@{
+    var success = TempData["SuccessMessage"] ?? "";
+    var error = TempData["ErrorMessage"] ?? "";
+}
+
+<script>
+    (function() {
+        var success = @Html.Raw(Json.Encode(success));
+        var error = @Html.Raw(Json.Encode(error));
+
+        function showPopup(msg, bgColor) {
+            if (!msg) return;
+            var popup = document.createElement('div');
+            popup.textContent = msg;
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.background = bgColor || '#4CAF50';
+            popup.style.color = '#fff';
+            popup.style.padding = '10px 14px';
+            popup.style.borderRadius = '6px';
+            popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            popup.style.zIndex = 99999;
+            popup.style.fontSize = '13px';
+            document.body.appendChild(popup);
+
+            setTimeout(function() {
+                popup.style.transition = "opacity 0.5s";
+                popup.style.opacity = 0;
+                setTimeout(function() { popup.remove(); }, 500);
+            }, 2000);
+        }
+
+        if (success) showPopup(success, '#4CAF50');
+        else if (error) showPopup(error, '#E53935');
+    })();
+</script>

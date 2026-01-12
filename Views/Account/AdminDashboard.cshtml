@@ -1,0 +1,129 @@
+﻿@{
+    ViewBag.Title = "Admin Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dashboard-header {
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            border-radius: 12px;
+            padding: 30px;
+            color: #fff;
+        }
+
+        @@keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        body.dark-theme .dashboard-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+        }
+
+        .dashboard-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-theme .dashboard-card {
+            background-color: #ffffff;
+            color: #212529;
+        }
+
+        body.dark-theme .dashboard-card {
+            background-color: #2c2c2e;
+            color: #ffffff;
+        }
+
+        .dashboard-card .btn-outline-light {
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .dashboard-card .btn-outline-light:hover {
+            background-color: #ffd700;
+            color: #000;
+        }
+
+        body.light-theme .dashboard-card .btn-outline-light {
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+
+        body.light-theme .dashboard-card .btn-outline-light:hover {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-5 theme-sensitive-text">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-header shadow-sm">
+                <h2 class="display-6 mb-2">
+                    <i class="bi bi-speedometer2 me-2"></i> Admin Dashboard
+                </h2>
+                <p class="mb-0">Manage the system and oversee platform activity.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 fade-in">
+        <div class="col-md-4">
+            <div class="card dashboard-card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <i class="bi bi-people-fill me-2"></i> Total Members
+                    </h5>
+                    <p class="card-text fs-3">@ViewBag.TotalUsers</p>
+                    <a href="@Url.Action("UserList", "Account")" class="btn btn-outline-light btn-sm">
+                        View All
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card dashboard-card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">
+                        <i class="bi bi-person-gear me-2"></i> Access Management
+                    </h5>
+                    <p class="card-text">Assign or edit access for users</p>
+                    <a href="@Url.Action("ManageRoles", "Account")" class="btn btn-outline-light btn-sm">
+                        Manage Access
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

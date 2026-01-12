@@ -1,0 +1,161 @@
+﻿@model List<CRM_Buddies_Task.Models.UserProjectViewModel>
+@{
+    ViewBag.Title = "Manage Project Applications";
+}
+
+@section Styles {
+    <style>
+
+        .page-header {
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            padding: 30px;
+            border-radius: 12px;
+            color: #fff;
+            margin-bottom: 2rem;
+        }
+
+        body.dark-theme .page-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+        }
+
+        @@keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background-color: #fff;
+        }
+
+        body.dark-theme .custom-table {
+            background-color: #1e1e1e;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+        }
+
+        .custom-table thead th {
+            background-color: #0d6efd;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px 20px;
+            text-align: left;
+            border-bottom: 2px solid #0b5ed7;
+        }
+
+        body.dark-theme .custom-table thead th {
+            background-color: #0b5ed7;
+            border-bottom-color: #084298;
+        }
+
+        .custom-table tbody td {
+            padding: 12px 20px;
+            vertical-align: middle;
+        }
+
+        .custom-table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+
+            .custom-table tbody tr:nth-child(odd) {
+                background-color: #f8f9fa;
+            }
+
+        body.dark-theme .custom-table tbody tr:nth-child(odd) {
+            background-color: #2a2a2d;
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #dbe9ff;
+        }
+
+        body.dark-theme .custom-table tbody tr:hover {
+            background-color: #3a3a3d;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+    </style>
+}
+
+<div class="container mt-5 fade-in">
+    <div class="page-header shadow-sm">
+        <h2 class="mb-0"><i class="bi bi-folder-check me-2"></i> @ViewBag.Title</h2>
+    </div>
+
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Project</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var app in Model)
+            {
+                <tr>
+                    <td>@app.FullName</td>
+                    <td>@app.Email</td>
+                    <td>@app.Mobile</td>
+                    <td>@app.ProjectName</td>
+                    <td>@app.Description</td>
+                    <td>@app.Status</td>
+                    <td>
+                        @if (app.Status == "Pending")
+                        {
+                            using (Html.BeginForm("UpdateApplicationStatus", "Account", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.Hidden("userProjectId", app.UserProjectId)
+                                @Html.Hidden("status", "Assigned")
+                                <button type="submit" class="btn btn-sm btn-success">Assign</button>
+                            }
+                        }
+                        else if (app.Status == "Assigned")
+                        {
+                            using (Html.BeginForm("UpdateApplicationStatus", "Account", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.Hidden("userProjectId", app.UserProjectId)
+                                @Html.Hidden("status", "Pending")
+                                <button type="submit" class="btn btn-sm btn-warning">Unassign</button>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

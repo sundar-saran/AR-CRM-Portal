@@ -1,0 +1,161 @@
+﻿@{
+    ViewBag.Title = "Welcome";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string fullName = ViewBag.FullName as string ?? "User";
+    int roleId = ViewBag.RoleId != null ? (int)ViewBag.RoleId : 0;
+    string roleName = roleId == 2 ? "Admin" : "User";
+}
+
+<div class="container mt-5 pt-5">
+    <div class="text-center mb-5 fade-in-up">
+        <h1 class="display-4 theme-sensitive-text">Welcome, @fullName!</h1>
+        <p class="lead theme-sensitive-text">Role: <strong>@roleName</strong></p>
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-4 mb-4 fade-in-up" style="animation-delay: 0.1s;">
+            <div class="card h-100 shadow-sm border-0 rounded-3 hover-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 display-4 text-info mb-3"></i>
+                    <h5 class="card-title">Dashboard</h5>
+                    <p class="card-text">Access your dashboard based on your role.</p>
+                    <a href="@Url.Action(roleId == 1 ? "UserDashboard" : "AdminDashboard", "Account")"
+                       class="btn btn-info btn-sm">Go to Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 fade-in-up" style="animation-delay: 0.3s;">
+            <div class="card h-100 shadow-sm border-0 rounded-3 hover-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle display-4 text-primary mb-3"></i>
+                    <h5 class="card-title">Profile</h5>
+                    <p class="card-text">View and edit your personal details.</p>
+                    <a href="@Url.Action("Profile", "Account")" class="btn btn-primary btn-sm">View Profile</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4 fade-in-up" style="animation-delay: 0.5s;">
+            <div class="card h-100 shadow-sm border-0 rounded-3 hover-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-arrow-right display-4 text-danger mb-3"></i>
+                    <h5 class="card-title">Logout</h5>
+                    <p class="card-text">Sign out of your account securely.</p>
+                    <a href="@Url.Action("Logout", "Account")" class="btn btn-danger btn-sm">Logout</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@{
+    var success = TempData["SuccessMessage"] ?? "";
+    var error = TempData["ErrorMessage"] ?? "";
+}
+
+<script>
+(function() {
+    var success = @Html.Raw(Json.Encode(success));
+    var error = @Html.Raw(Json.Encode(error));
+
+    function showPopup(msg, bgColor) {
+        if (!msg) return;
+        var popup = document.createElement('div');
+        popup.textContent = msg;
+        popup.style.position = 'fixed';
+        popup.style.top = '20px';
+        popup.style.right = '20px';
+        popup.style.background = bgColor || '#4CAF50';
+        popup.style.color = '#fff';
+        popup.style.padding = '10px 14px';
+        popup.style.borderRadius = '6px';
+        popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+        popup.style.zIndex = 99999;
+        popup.style.fontSize = '13px';
+        document.body.appendChild(popup);
+
+        setTimeout(function() {
+            popup.style.transition = "opacity 0.5s";
+            popup.style.opacity = 0;
+            setTimeout(function() { popup.remove(); }, 500);
+        }, 2000);
+    }
+
+    if (success) showPopup(success, '#4CAF50');
+    if (error) showPopup(error, '#E53935');
+})();
+</script>
+
+<style>
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease forwards;
+}
+@@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+@@media (max-width: 1200px) {
+    .hover-card {
+        margin: 15px auto;
+        max-width: 90%;
+    }
+}
+
+@@media (max-width: 992px) {
+    .hover-card {
+        margin: 12px auto;
+        max-width: 95%;
+    }
+    .fade-in-up {
+        animation-duration: 1s;
+    }
+}
+
+@@media (max-width: 768px) {
+    .hover-card {
+        max-width: 100%;
+        margin: 10px auto;
+        padding: 15px;
+    }
+    h1, h2, h3 {
+        font-size: 1.2rem !important;
+        text-align: center;
+    }
+    p {
+        font-size: 0.95rem;
+        text-align: center;
+    }
+}
+
+@@media (max-width: 576px) {
+    .hover-card {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+    h1, h2 {
+        font-size: 1rem !important;
+    }
+    p {
+        font-size: 0.85rem;
+    }
+}
+
+</style>
