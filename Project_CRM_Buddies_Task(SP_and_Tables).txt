@@ -1,0 +1,1226 @@
+Project- CRM_Buddies_Task
+
+------SP
+SP Name= sp_Sundar_CRM_Project
+SP Structure-
+USE [Trainee_DB]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_Sundar_CRM_Project]    Script Date: 06-12-2025 09:56:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[sp_Sundar_CRM_Project]
+    @Action NVARCHAR(50),
+    @UserId INT = NULL,
+    @FullName NVARCHAR(100) = NULL,
+    @Mobile NVARCHAR(15) = NULL,
+    @Email NVARCHAR(100) = NULL,
+    @City NVARCHAR(50) = NULL,
+    @Password NVARCHAR(255) = NULL,
+    @HashedPassword NVARCHAR(255) = NULL,
+    @Role_Id INT = NULL,
+    @CreatedOn INT = NULL,
+    @ProjectId INT = NULL,
+    @ProjectName NVARCHAR(100) = NULL,
+    @Description NVARCHAR(MAX) = NULL,
+    @IsActive BIT = NULL,
+    @UserProjectId INT = NULL,
+    @Status NVARCHAR(20) = NULL,
+    @NewRoleId INT = NULL,
+    @UpdaterId INT = NULL,
+    @SearchEmail NVARCHAR(100) = NULL,
+    @SearchMobile NVARCHAR(15) = NULL,
+    @TargetUserId INT = NULL,
+    @ColumnName NVARCHAR(128) = NULL,
+    @DataType NVARCHAR(50) = NULL,
+    @LeadRowData NVARCHAR(MAX) = NULL,
+    @Columns NVARCHAR(MAX) = NULL,
+    @Values NVARCHAR(MAX) = NULL,
+    @IsRequired BIT = 0,
+    @LeadId INT = NULL,
+    @ApprovedByUserId INT = NULL,
+    @MenuURL NVARCHAR(200) = NULL,
+    @Menu_ID INT = NULL,
+    @AccessId INT = NULL,
+    @MenuId NVARCHAR(500) = NULL,
+    @MenuIds NVARCHAR(500) = NULL
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		DECLARE @NewUserId INT, @UserMenuIds NVARCHAR(50);
+
+		-- User Management Actions
+		IF @Action IN ('RegisterUser', 'AddNewUser', 'ValidateUser')
+			SET @HashedPassword = CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @Password), 2);
+
+		IF @Action IN ('RegisterUser', 'UpdateUserRole')
+			SET @MenuIds = CASE 
+							WHEN @Role_Id = 2 OR @NewRoleId = 2 THEN '1,2,3,5,8,9,10,12' 
+							WHEN @Role_Id = 1 OR @NewRoleId = 1 THEN '1,4,6,7,11' 
+							ELSE '' 
+						  END;
+
+		-- User Registration Action
+		IF @Action = 'RegisterUser'
+		BEGIN
+			-- Check if the user already exists by email or mobile
+			IF EXISTS (SELECT 1 FROM Sundar_tbl_UserDetails WHERE (Email = @Email OR Mobile = @Mobile) AND is_Delete = 0)
+				SELECT 'User with this email or mobile already exists.' AS Message, 0 AS Flag;
+			ELSE
+			BEGIN
+				-- Insert new user and get the newly inserted User_ID
+				INSERT INTO Sundar_tbl_UserDetails (FullName, Mobile, Email, City, Password, Created_On)
+				OUTPUT INSERTED.User_ID 
+				VALUES (@FullName, @Mobile, @Email, @City, @HashedPassword, ISNULL(@CreatedOn, SCOPE_IDENTITY()));
+
+				SET @NewUserId = SCOPE_IDENTITY();
+
+				-- Insert user access data (assign roles and menu items)
+				INSERT INTO Sundar_tbl_Access (User_ID, Role_ID, Menu_ID, Created_On) 
+				VALUES (@NewUserId, @Role_Id, @MenuIds, ISNULL(@CreatedOn, @NewUserId));
+
+				SELECT 'User registered successfully' AS Message, 1 AS Flag, @NewUserId AS UserId;
+			END
+		END
+
+		-- Combined User Data Retrieval Action
+		ELSE IF @Action = 'GetUserData'
+		BEGIN
+			SELECT 
+				u.User_ID, u.FullName, u.Mobile, u.Email, u.City, u.is_Active, u.Created_Date,
+				a.Role_ID, r.RoleName,
+				CASE 
+					WHEN @UserId IS NOT NULL AND u.User_ID = @UserId THEN 'SingleUser'
+					WHEN @Email IS NOT NULL AND u.Email = @Email THEN 'SingleUser'
+					ELSE 'AllUsers'
+				END AS ResultType
+			FROM Sundar_tbl_UserDetails u
+			LEFT JOIN Sundar_tbl_Access a ON u.User_ID = a.User_ID AND a.is_Delete = 0
+			LEFT JOIN Sundar_tbl_Role r ON a.Role_ID = r.Role_ID
+			WHERE u.is_Delete = 0
+			  AND (
+				(@UserId IS NOT NULL AND u.User_ID = @UserId) OR
+				(@Email IS NOT NULL AND u.Email = @Email) OR
+				(@UserId IS NULL AND @Email IS NULL)
+			  );
+		END
+
+		-- Combined User Access Data Action
+		ELSE IF @Action = 'GetAccessData'
+		BEGIN
+			SELECT 
+				u.User_ID, u.FullName, u.Email, u.Mobile, a.Role_ID, r.RoleName,
+				CASE 
+					WHEN @UserId IS NOT NULL THEN 'UserAccess'
+					ELSE 'AllAccessData'
+				END AS ResultType
+			FROM Sundar_tbl_UserDetails u
+			INNER JOIN Sundar_tbl_Access a ON u.User_ID = a.User_ID
+			INNER JOIN Sundar_tbl_Role r ON a.Role_ID = r.Role_ID
+			WHERE u.is_Delete = 0
+			  AND (@UserId IS NULL OR u.User_ID = @UserId);
+		END
+
+		-- Validate User Action
+		IF @Action = 'ValidateUser'
+	BEGIN
+		SET @HashedPassword = CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @Password), 2);
+
+		SELECT ud.User_ID, a.Role_ID 
+		FROM Sundar_tbl_UserDetails ud
+		JOIN Sundar_tbl_Access a ON ud.User_ID = a.User_ID
+		WHERE ud.Email = @Email 
+		AND ud.Password = @HashedPassword
+		AND ud.is_Delete = 0
+		AND ud.is_Active = 1
+		AND a.Role_ID IS NOT NULL;
+	END
+
+
+		-- Combined User Update Action
+		ELSE IF @Action = 'UpdateUser'
+		BEGIN
+			UPDATE Sundar_tbl_UserDetails 
+			SET 
+				FullName = ISNULL(@FullName, FullName),
+				Mobile = ISNULL(@Mobile, Mobile),
+				City = ISNULL(@City, City),
+				is_Active = CASE WHEN @IsActive IS NOT NULL THEN @IsActive ELSE is_Active END,
+				Update_Date = GETDATE(), 
+				Update_on = ISNULL(@UpdaterId, Update_on)
+			WHERE User_ID = @UserId AND is_Delete = 0;
+        
+			SELECT @@ROWCOUNT as RowsAffected;
+		END
+
+    ELSE IF @Action = 'UpdateUserRole'
+    BEGIN
+        UPDATE Sundar_tbl_Access 
+        SET Role_ID = @NewRoleId, Menu_ID = @MenuIds, Update_Date = GETDATE(), Update_on = @UpdaterId
+        WHERE User_ID = @UserId AND is_Delete = 0;
+        SELECT @@ROWCOUNT;
+    END
+
+    ELSE IF @Action = 'AddNewUser'
+	BEGIN
+		BEGIN TRY
+			BEGIN TRANSACTION;
+
+			-- Check if user already exists
+			IF EXISTS (SELECT 1 FROM Sundar_tbl_UserDetails WHERE (Email = @Email OR Mobile = @Mobile) AND is_Delete = 0)
+			BEGIN
+				SELECT 0 AS Success;
+				RETURN;
+			END
+
+			SET @HashedPassword = CONVERT(NVARCHAR(255), HASHBYTES('SHA2_256', @Password), 2);
+
+			INSERT INTO Sundar_tbl_UserDetails (FullName, Email, Mobile, City, Password, is_Delete, is_Active, Created_Date, Created_On) 
+			VALUES (@FullName, @Email, @Mobile, @City, @HashedPassword, 0, 1, GETDATE(), 1);
+        
+			SET @NewUserId = SCOPE_IDENTITY();
+        
+			INSERT INTO Sundar_tbl_Access (User_ID, Role_ID, Menu_ID, is_Delete, is_Active, Created_Date, Created_On) 
+			VALUES (@NewUserId, 1, '1,4,6,7,11', 0, 1, GETDATE(), 1);
+        
+			COMMIT TRANSACTION;
+			SELECT 1 AS Success;
+		END TRY
+		BEGIN CATCH
+			ROLLBACK TRANSACTION;
+			SELECT 0 AS Success;
+		END CATCH
+	END
+
+    -- Menu and Access Management
+    ELSE IF @Action = 'GetUserMenus'
+    BEGIN
+        SELECT @UserMenuIds = Menu_ID FROM Sundar_tbl_Access WHERE User_ID = @UserId;
+        SELECT Menu_ID, MenuName, MenuURL FROM Sundar_tbl_Menu 
+        WHERE CHARINDEX(',' + CAST(Menu_ID AS NVARCHAR(10)) + ',', ',' + @UserMenuIds + ',') > 0;
+    END
+
+    ELSE IF @Action = 'GetRoles'
+    BEGIN
+        SELECT Role_ID, RoleName FROM Sundar_tbl_Role ORDER BY RoleName;
+    END
+
+    -- Combined Project Management Action
+    ELSE IF @Action = 'ManageProject'
+    BEGIN
+        IF @ProjectId IS NULL
+        BEGIN
+            INSERT INTO Sundar_tbl_Project (ProjectName, Description, is_Active, Created_Date) 
+            VALUES (@ProjectName, @Description, 1, GETDATE());
+            SELECT SCOPE_IDENTITY() as NewProjectId, @@ROWCOUNT as RowsAffected;
+        END
+        ELSE -- Update existing project
+        BEGIN
+            UPDATE Sundar_tbl_Project 
+            SET ProjectName = @ProjectName, 
+                Description = @Description,
+                is_Active = ISNULL(@IsActive, is_Active)
+            WHERE Project_ID = @ProjectId;
+            SELECT @ProjectId as ProjectId, @@ROWCOUNT as RowsAffected;
+        END
+    END
+
+    -- Combined Project Data Retrieval Action
+    ELSE IF @Action = 'GetProjectData'
+    BEGIN
+        SELECT 
+            Project_ID, ProjectName, Description, is_Active, Created_Date,
+            CASE 
+                WHEN @ProjectId IS NOT NULL THEN 'SingleProject'
+                ELSE 'AllProjects'
+            END as ResultType
+        FROM Sundar_tbl_Project 
+        WHERE (@ProjectId IS NULL OR Project_ID = @ProjectId)
+          AND (@IsActive IS NULL OR is_Active = @IsActive)
+        ORDER BY 
+            CASE WHEN @ProjectId IS NULL THEN Created_Date END DESC, 
+            ProjectName;
+    END
+
+    -- Combined User Projects Action
+	ELSE IF @Action = 'ManageUserProjects'
+	BEGIN
+		IF @Status = 'Apply' -- Apply to project
+		BEGIN
+			IF NOT EXISTS (SELECT 1 FROM Sundar_tbl_UserProjects WHERE User_ID = @UserId AND Project_ID = @ProjectId)
+				INSERT INTO Sundar_tbl_UserProjects (User_ID, Project_ID, Status) VALUES (@UserId, @ProjectId, 'Pending');
+			SELECT @@ROWCOUNT as RowsAffected;
+		END
+		ELSE IF @Status IS NOT NULL AND @UserProjectId IS NOT NULL -- Update status
+		BEGIN
+			UPDATE Sundar_tbl_UserProjects 
+			SET Status = @Status, Update_Date = GETDATE() 
+			WHERE UserProject_ID = @UserProjectId;
+			SELECT @@ROWCOUNT as RowsAffected;
+		END
+		ELSE IF @UserId IS NOT NULL AND @Status IS NOT NULL -- Get user projects by status (ADD THIS CONDITION)
+		BEGIN
+			SELECT 
+				up.UserProject_ID, up.Status, up.User_ID, p.Project_ID, p.ProjectName, p.Description,
+				u.FullName, u.Email, u.Mobile,
+				'UserProjectsByStatus' as ResultType
+			FROM Sundar_tbl_UserProjects up
+			JOIN Sundar_tbl_Project p ON up.Project_ID = p.Project_ID
+			JOIN Sundar_tbl_UserDetails u ON up.User_ID = u.User_ID 
+			WHERE u.is_Delete = 0
+			  AND up.User_ID = @UserId
+			  AND up.Status = @Status;
+		END
+		ELSE IF @UserId IS NOT NULL -- Get all user projects
+		BEGIN
+			SELECT 
+				up.UserProject_ID, up.Status, up.User_ID, p.Project_ID, p.ProjectName, p.Description,
+				u.FullName, u.Email, u.Mobile,
+				'UserProjects' as ResultType
+			FROM Sundar_tbl_UserProjects up
+			JOIN Sundar_tbl_Project p ON up.Project_ID = p.Project_ID
+			JOIN Sundar_tbl_UserDetails u ON up.User_ID = u.User_ID 
+			WHERE u.is_Delete = 0
+			  AND up.User_ID = @UserId;
+		END
+
+		ELSE -- Get all applications
+		BEGIN
+			SELECT 
+				up.UserProject_ID, up.Status, up.User_ID, p.Project_ID, p.ProjectName, p.Description,
+				u.FullName, u.Email, u.Mobile,
+				'AllApplications' as ResultType
+			FROM Sundar_tbl_UserProjects up
+			JOIN Sundar_tbl_Project p ON up.Project_ID = p.Project_ID
+			JOIN Sundar_tbl_UserDetails u ON up.User_ID = u.User_ID 
+			WHERE u.is_Delete = 0;
+		END
+	END
+	IF @Action = 'GetApprovedProjectsByUser'
+		BEGIN
+			SELECT 
+			p.Project_ID,
+			p.ProjectName, 
+			p.Description,
+			up.Status
+		FROM Sundar_tbl_UserProjects up
+		JOIN Sundar_tbl_Project p ON up.Project_ID = p.Project_ID
+		WHERE up.User_ID = @UserId AND up.Status = 'Assigned'
+		END
+    -- Lead Management Actions
+    ELSE IF @Action = 'GetColumns'
+	BEGIN
+		SELECT COLUMN_NAME, DATA_TYPE
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = 'Sundar_tbl_Lead'
+		  AND COLUMN_NAME NOT IN ('Id', 'CreatedByUserId', 'CreatedDate')
+		ORDER BY ORDINAL_POSITION;
+	END
+
+	ELSE IF @Action = 'AddColumn'
+	BEGIN
+		IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Sundar_tbl_Lead' AND COLUMN_NAME = @ColumnName)
+		BEGIN
+			SELECT 'Column exists' AS Message, 0 AS Flag;
+		END
+		ELSE
+		BEGIN
+			BEGIN TRY
+				DECLARE @sqlAdd NVARCHAR(MAX) = N'ALTER TABLE dbo.Sundar_tbl_Lead ADD ' + QUOTENAME(@ColumnName) + ' ' + @DataType + ' NULL';
+				EXEC sp_executesql @sqlAdd;
+				SELECT 'Column added successfully' AS Message, 1 AS Flag;
+			END TRY
+			BEGIN CATCH
+				SELECT 'Error adding column: ' + ERROR_MESSAGE() AS Message, 0 AS Flag;
+			END CATCH
+		END
+	END
+
+	ELSE IF @Action = 'DeleteColumn'
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Sundar_tbl_Lead' AND COLUMN_NAME = @ColumnName)
+		BEGIN
+			SELECT 'Column does not exist' AS Message, 0 AS Flag;
+		END
+		ELSE
+		BEGIN
+			DECLARE @sqlDrop NVARCHAR(MAX) = N'ALTER TABLE Sundar_tbl_Lead DROP COLUMN ' + QUOTENAME(@ColumnName);
+			EXEC sp_executesql @sqlDrop;
+			SELECT 'Column deleted' AS Message, 1 AS Flag;
+		END
+	END
+
+	ELSE IF @Action = 'InsertLead'
+	BEGIN
+		IF @UserId IS NULL OR @Columns IS NULL OR @Values IS NULL
+		BEGIN
+			SELECT 'Invalid input data' AS Message, 0 AS Flag;
+			RETURN;
+		END
+
+		DECLARE @sqlInsert NVARCHAR(MAX);
+
+		SET @sqlInsert = '
+			INSERT INTO dbo.Sundar_tbl_Lead (CreatedByUserId, ' + @Columns + ', CreatedDate)
+			VALUES (' + CAST(@UserId AS NVARCHAR) + ', ' + @Values + ', GETDATE())
+		';
+
+		BEGIN TRY
+			EXEC sp_executesql @sqlInsert;
+			SELECT 'Lead inserted successfully' AS Message, 1 AS Flag;
+		END TRY
+		BEGIN CATCH
+			SELECT 'Insert failed: ' + ERROR_MESSAGE() AS Message, 0 AS Flag;
+		END CATCH
+	END
+
+	ELSE IF @Action = 'GetLeads'
+	BEGIN
+		DECLARE @colsSelect NVARCHAR(MAX);
+
+		-- Use XML PATH method for string aggregation (compatible with older SQL versions)
+		SELECT @colsSelect = COALESCE(@colsSelect + ', ', '') + QUOTENAME(COLUMN_NAME)
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = 'Sundar_tbl_Lead'
+		  AND COLUMN_NAME NOT IN ('Id', 'CreatedByUserId', 'CreatedDate');
+
+		SET @colsSelect = ISNULL(@colsSelect, '');
+
+		DECLARE @sqlSelect NVARCHAR(MAX) = 
+			N'SELECT Id, CreatedByUserId, CreatedDate' 
+			+ CASE WHEN @colsSelect <> '' THEN ', ' + @colsSelect ELSE '' END
+			+ N' FROM dbo.Sundar_tbl_Lead'
+			+ CASE WHEN @UserId IS NOT NULL THEN N' WHERE CreatedByUserId = ' + CAST(@UserId AS NVARCHAR(10)) ELSE '' END;
+
+		EXEC sp_executesql @sqlSelect;
+	END
+
+	ELSE IF @Action = 'GetAllLeadApplications'
+	BEGIN
+		SELECT 
+			l.Id,
+			l.CreatedByUserId,
+			u.FullName as UserName,
+			u.Email as UserEmail,
+			l.CreatedDate
+		FROM Sundar_tbl_Lead l
+		INNER JOIN Sundar_tbl_UserDetails u ON l.CreatedByUserId = u.User_ID
+		ORDER BY l.CreatedDate DESC;
+	END
+
+	-- Menu Management Actions
+	ELSE IF @Action = 'AddMenu'
+	BEGIN
+		IF @Role_Id != 2
+		BEGIN
+			SELECT 'Access Denied: Admin only.' AS Message, 0 AS Flag;
+			RETURN;
+		END
+
+		INSERT INTO Sundar_tbl_Menu (MenuName, MenuURL, is_Active, Created_On)
+		VALUES (@FullName, @MenuURL, 1, ISNULL(@CreatedOn, 1));
+
+		SELECT 'Menu added successfully.' AS Message, 1 AS Flag, SCOPE_IDENTITY() AS NewMenuId;
+	END
+
+	ELSE IF @Action = 'GetMenus'
+	BEGIN
+		SELECT 
+			Menu_ID, MenuName, MenuURL, is_Active, is_Delete, Created_Date,
+			CASE 
+				WHEN @Menu_ID IS NOT NULL THEN 'SingleMenu'
+				ELSE 'AllMenus'
+			END AS ResultType
+		FROM Sundar_tbl_Menu 
+		WHERE is_Delete = 0
+		  AND (@Menu_ID IS NULL OR Menu_ID = @Menu_ID)
+		  AND (@IsActive IS NULL OR is_Active = @IsActive);
+	END
+
+	ELSE IF @Action = 'UpdateMenu'
+	BEGIN
+		IF @Role_Id != 2
+		BEGIN
+			SELECT 'Access Denied: Admin only.' AS Message, 0 AS Flag;
+			RETURN;
+		END
+
+		UPDATE Sundar_tbl_Menu 
+		SET 
+			MenuName = ISNULL(@FullName, MenuName),
+			MenuURL = ISNULL(@MenuURL, MenuURL),
+			is_Active = ISNULL(@IsActive, is_Active),
+			Update_Date = GETDATE(),
+			Update_on = ISNULL(@UpdaterId, Update_on)
+		WHERE Menu_ID = @Menu_ID AND is_Delete = 0;
+
+		SELECT @@ROWCOUNT AS RowsAffected;
+	END
+
+	ELSE IF @Action = 'DeleteMenu'
+	BEGIN
+		IF @Role_Id != 2
+		BEGIN
+			SELECT 'Access Denied: Admin only.' AS Message, 0 AS Flag;
+			RETURN;
+		END
+
+		-- Soft delete
+		UPDATE Sundar_tbl_Menu 
+		SET is_Delete = 1, Update_Date = GETDATE(), Update_on = @UpdaterId
+		WHERE Menu_ID = @Menu_ID AND is_Delete = 0;
+
+		SELECT @@ROWCOUNT AS RowsAffected;
+	END
+
+	ELSE IF @Action = 'GetLeadApplicationDetails'
+	BEGIN
+		DECLARE @sql NVARCHAR(MAX);
+		SELECT @sql = 'SELECT * FROM Sundar_tbl_Lead WHERE Id = ' + CAST(@LeadId AS NVARCHAR(10));
+		EXEC sp_executesql @sql;
+	END
+
+	-- Access Table
+	ELSE IF @Action = 'GetUserAccessDetails'
+    BEGIN
+        SELECT 
+            u.User_ID,
+            u.FullName,
+            u.Email,
+            a.Role_ID,
+            r.RoleName,
+            a.Menu_ID,
+            a.Access_ID
+        FROM Sundar_tbl_UserDetails u
+        INNER JOIN Sundar_tbl_Access a ON u.User_ID = a.User_ID AND a.is_Delete = 0
+        INNER JOIN Sundar_tbl_Role r ON a.Role_ID = r.Role_ID
+        WHERE u.is_Delete = 0;
+    END
+    ELSE IF @Action = 'GetMenuDetails'
+    BEGIN
+        SELECT 
+            Menu_ID,
+            MenuName,
+            MenuURL
+        FROM Sundar_tbl_Menu 
+        WHERE is_Delete = 0 AND is_Active = 1;
+    END
+    ELSE IF @Action = 'UpdateUserAccess'
+    BEGIN
+        BEGIN TRY
+            -- If @MenuIds is NULL or empty, use role-based defaults
+            IF @MenuIds IS NULL OR LTRIM(RTRIM(@MenuIds)) = ''
+            BEGIN
+                SET @MenuIds = CASE 
+                    WHEN @Role_Id = 2 THEN '1,2,3,5,8,9,10,12' 
+                    WHEN @Role_Id = 1 THEN '1,4,6,7,11' 
+                    ELSE '' 
+                END;
+            END
+
+            UPDATE Sundar_tbl_Access 
+            SET 
+                Role_ID = @Role_Id,
+                Menu_ID = @MenuIds,
+                Update_Date = GETDATE(),
+                Update_on = @UpdaterId
+            WHERE User_ID = @UserId AND is_Delete = 0;
+
+            SELECT 'Access updated successfully' AS Message, 1 AS Flag;
+        END TRY
+        BEGIN CATCH
+            SELECT 'Error updating access: ' + ERROR_MESSAGE() AS Message, 0 AS Flag;
+        END CATCH
+    END
+    ELSE IF @Action = 'GetUserAccessByUserId'
+    BEGIN
+        SELECT 
+            a.Access_ID,
+            a.User_ID,
+            a.Role_ID,
+            r.RoleName,
+            a.Menu_ID,
+            u.FullName,
+            u.Email
+        FROM Sundar_tbl_Access a
+        INNER JOIN Sundar_tbl_UserDetails u ON a.User_ID = u.User_ID
+        INNER JOIN Sundar_tbl_Role r ON a.Role_ID = r.Role_ID
+        WHERE a.User_ID = @UserId AND a.is_Delete = 0 AND u.is_Delete = 0;
+    END
+    ELSE
+    BEGIN
+        SELECT 'Invalid Action' AS Message, 0 AS Flag;
+    END
+END
+
+
+
+------Tables (Only table Schema- for schema + data use below table)
+------Sundar_tbl_UserDetails
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_UserDetails]    Script Date: 06-12-2025 10:13:38 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_UserDetails](
+	[User_ID] [int] IDENTITY(1,1) NOT NULL,
+	[FullName] [nvarchar](100) NULL,
+	[Mobile] [nvarchar](15) NULL,
+	[Email] [nvarchar](100) NULL,
+	[City] [nvarchar](50) NULL,
+	[Password] [nvarchar](100) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[User_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UQ_Email] UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [UQ_Mobile] UNIQUE NONCLUSTERED 
+(
+	[Mobile] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+
+-----Sundar_tbl_Access
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_Access]    Script Date: 06-12-2025 10:13:01 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_Access](
+	[Access_ID] [int] IDENTITY(1,1) NOT NULL,
+	[User_ID] [int] NULL,
+	[Role_ID] [int] NULL,
+	[Menu_ID] [varchar](max) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Access_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Access] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Access] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Access] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Access]  WITH NOCHECK ADD FOREIGN KEY([Role_ID])
+REFERENCES [dbo].[Sundar_tbl_Role] ([Role_ID])
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Access]  WITH NOCHECK ADD FOREIGN KEY([User_ID])
+REFERENCES [dbo].[Sundar_tbl_UserDetails] ([User_ID])
+GO
+
+
+-----Sundar_tbl_Role
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_Role]    Script Date: 06-12-2025 10:12:15 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_Role](
+	[Role_ID] [int] IDENTITY(1,1) NOT NULL,
+	[RoleName] [nvarchar](50) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Role_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Role] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Role] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Role] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+
+
+-----Sundar_tbl_Project
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_Project]    Script Date: 06-12-2025 10:14:21 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_Project](
+	[Project_ID] [int] IDENTITY(1,1) NOT NULL,
+	[ProjectName] [nvarchar](200) NULL,
+	[Description] [nvarchar](max) NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Project_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Project] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Project] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+
+
+-----Sundar_tbl_UserProjects
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_UserProjects]    Script Date: 06-12-2025 10:14:52 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_UserProjects](
+	[UserProject_ID] [int] IDENTITY(1,1) NOT NULL,
+	[User_ID] [int] NULL,
+	[Project_ID] [int] NULL,
+	[Applied_Date] [datetime] NULL,
+	[Status] [nvarchar](20) NULL,
+	[Update_Date] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[UserProject_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects] ADD  DEFAULT (getdate()) FOR [Applied_Date]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects] ADD  DEFAULT ('Pending') FOR [Status]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects]  WITH NOCHECK ADD FOREIGN KEY([Project_ID])
+REFERENCES [dbo].[Sundar_tbl_Project] ([Project_ID])
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects]  WITH NOCHECK ADD FOREIGN KEY([User_ID])
+REFERENCES [dbo].[Sundar_tbl_UserDetails] ([User_ID])
+GO
+
+
+-----Sundar_tbl_Lead
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_Lead]    Script Date: 06-12-2025 10:15:33 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_Lead](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[CreatedByUserId] [int] NULL,
+	[CreatedDate] [datetime] NULL,
+	[Name] [nvarchar](100) NULL,
+	[Mobile Number] [varchar](15) NULL,
+	[Dept] [nvarchar](100) NULL,
+	[Experience] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Lead] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+
+EXEC sys.sp_addextendedproperty @name=N'IsRequired', @value=0 , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Sundar_tbl_Lead', @level2type=N'COLUMN',@level2name=N'Name'
+GO
+
+
+-----Sundar_tbl_Menu
+USE [Trainee_DB]
+GO
+
+/****** Object:  Table [dbo].[Sundar_tbl_Menu]    Script Date: 06-12-2025 10:16:12 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Sundar_tbl_Menu](
+	[Menu_ID] [int] IDENTITY(1,1) NOT NULL,
+	[MenuName] [nvarchar](100) NULL,
+	[MenuURL] [nvarchar](200) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Menu_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Menu] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Menu] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+
+ALTER TABLE [dbo].[Sundar_tbl_Menu] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+
+
+
+
+
+----------Table (With Schema + Data)
+USE [USE_DATABASE]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_Access]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_Access](
+	[Access_ID] [int] IDENTITY(1,1) NOT NULL,
+	[User_ID] [int] NULL,
+	[Role_ID] [int] NULL,
+	[Menu_ID] [varchar](max) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Access_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_Lead]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_Lead](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[CreatedByUserId] [int] NULL,
+	[CreatedDate] [datetime] NULL,
+	[Name] [nvarchar](100) NULL,
+	[Mobile Number] [varchar](15) NULL,
+	[Dept] [nvarchar](100) NULL,
+	[Experience] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_Menu]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_Menu](
+	[Menu_ID] [int] IDENTITY(1,1) NOT NULL,
+	[MenuName] [nvarchar](100) NULL,
+	[MenuURL] [nvarchar](200) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Menu_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_Project]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_Project](
+	[Project_ID] [int] IDENTITY(1,1) NOT NULL,
+	[ProjectName] [nvarchar](200) NULL,
+	[Description] [nvarchar](max) NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Project_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_Role]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_Role](
+	[Role_ID] [int] IDENTITY(1,1) NOT NULL,
+	[RoleName] [nvarchar](50) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Role_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_UserDetails]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_UserDetails](
+	[User_ID] [int] IDENTITY(1,1) NOT NULL,
+	[FullName] [nvarchar](100) NULL,
+	[Mobile] [nvarchar](15) NULL,
+	[Email] [nvarchar](100) NULL,
+	[City] [nvarchar](50) NULL,
+	[Password] [nvarchar](100) NULL,
+	[is_Delete] [bit] NULL,
+	[is_Active] [bit] NULL,
+	[Created_Date] [datetime] NULL,
+	[Created_On] [int] NULL,
+	[Update_Date] [datetime] NULL,
+	[Update_on] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[User_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Sundar_tbl_UserProjects]    Script Date: 09-01-2026 17:37:17 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Sundar_tbl_UserProjects](
+	[UserProject_ID] [int] IDENTITY(1,1) NOT NULL,
+	[User_ID] [int] NULL,
+	[Project_ID] [int] NULL,
+	[Applied_Date] [datetime] NULL,
+	[Status] [nvarchar](20) NULL,
+	[Update_Date] [datetime] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[UserProject_ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Access] ON 
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (1, 1, 2, N'1,2,3,5,8,9,10,12', 0, 1, CAST(N'2025-09-17T11:51:34.987' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (2, 2, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T12:10:34.740' AS DateTime), 2, CAST(N'2025-10-09T16:53:40.930' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (3, 3, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T17:32:11.897' AS DateTime), 3, CAST(N'2025-09-23T13:55:22.830' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (4, 4, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T17:50:11.320' AS DateTime), 4, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (5, 5, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T17:53:52.300' AS DateTime), 5, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (6, 6, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T17:58:09.560' AS DateTime), 6, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (7, 8, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T18:00:02.903' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (8, 9, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-17T18:02:19.620' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (9, 12, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-18T10:15:34.400' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (10, 13, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-18T10:27:45.683' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (11, 14, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-24T17:31:55.723' AS DateTime), 14, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (12, 15, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T11:15:19.140' AS DateTime), 15, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (13, 16, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T11:19:58.740' AS DateTime), 16, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (14, 17, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T11:23:24.077' AS DateTime), 17, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (15, 18, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T11:31:33.273' AS DateTime), 18, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (16, 19, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T12:03:51.833' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (17, 20, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T12:07:14.320' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (18, 21, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T12:17:18.710' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (19, 22, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T12:18:02.227' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Access] ([Access_ID], [User_ID], [Role_ID], [Menu_ID], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (20, 23, 1, N'1,4,6,7,11', 0, 1, CAST(N'2025-09-25T12:27:57.880' AS DateTime), 1, NULL, NULL)
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Access] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Lead] ON 
+GO
+INSERT [dbo].[Sundar_tbl_Lead] ([Id], [CreatedByUserId], [CreatedDate], [Name], [Mobile Number], [Dept], [Experience]) VALUES (1, 2, CAST(N'2025-09-18T17:24:54.000' AS DateTime), N'Sundar', NULL, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Lead] ([Id], [CreatedByUserId], [CreatedDate], [Name], [Mobile Number], [Dept], [Experience]) VALUES (3, 13, CAST(N'2025-09-18T17:37:42.743' AS DateTime), N'Sundar', N'1254568784', N'IT', 2)
+GO
+INSERT [dbo].[Sundar_tbl_Lead] ([Id], [CreatedByUserId], [CreatedDate], [Name], [Mobile Number], [Dept], [Experience]) VALUES (4, 2, CAST(N'2025-09-29T16:51:20.160' AS DateTime), N'testttt', N'7014545587', N'test', 6)
+GO
+INSERT [dbo].[Sundar_tbl_Lead] ([Id], [CreatedByUserId], [CreatedDate], [Name], [Mobile Number], [Dept], [Experience]) VALUES (5, 2, CAST(N'2025-10-09T16:52:42.670' AS DateTime), N'sundar', N'9024754383', N'IT', 2)
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Lead] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Menu] ON 
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (1, N'Profile', N'/Account/Profile', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (2, N'Admin Dashboard', N'/Account/AdminDashboard', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (3, N'User List', N'/Account/UserList', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (4, N'User Dashboard', N'/Account/UserDashboard', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (5, N'Manage Access', N'/Account/ManageRoles', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (6, N'Your Projects', N'/Account/YourProjects', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, CAST(N'2025-10-16T15:16:55.110' AS DateTime), NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (7, N'Apply To Project', N'/Account/ProjectApply', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, CAST(N'2025-09-22T12:33:11.703' AS DateTime), NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (8, N'Show All Projects', N'/Account/AllProjects', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (9, N'Manage All Projects', N'/Account/ManageProjectApplications', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (10, N'Manage Lead Page', N'/Account/ManageLead', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (11, N'Apply To Lead', N'/Account/ApplyForLead', 0, 1, CAST(N'2025-09-17T11:49:42.240' AS DateTime), 1, CAST(N'2025-09-22T12:33:55.723' AS DateTime), NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Menu] ([Menu_ID], [MenuName], [MenuURL], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (12, N'Manage Menus', N'/Account/ManageMenus', 0, 1, CAST(N'2025-09-22T12:00:09.420' AS DateTime), 1, NULL, NULL)
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Menu] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Project] ON 
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (1, N'AR-CRM Portal', N'Customer relationship management tool 
+
+
+
+', 1, CAST(N'2025-09-17T11:49:42.263' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (2, N'E-Commerce Website', N'Online shopping platform', 1, CAST(N'2025-09-17T11:49:42.263' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (3, N'Employee Management System', N'Tracks employees and tasks', 1, CAST(N'2025-09-17T11:49:42.263' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (4, N'Generative Ai Project', N'The use of AI to create new content, like text, images, music, audio, and videos.', 1, CAST(N'2025-09-17T11:49:42.263' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (5, N'Azure Data Factory', N'Create Pipeline and perform data copy activity with SHIR to make connectivity with On-Premises to cloud.', 1, CAST(N'2025-09-17T16:12:42.333' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (6, N'Microsoft Synapse ', N'Create Pipeline and copy data from On-premises to cloud', 1, CAST(N'2025-09-25T12:43:58.473' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (7, N'Azure Data Factory - 2', N'Make Secure with SHIR', 1, CAST(N'2025-09-25T12:49:20.410' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_Project] ([Project_ID], [ProjectName], [Description], [is_Active], [Created_Date]) VALUES (8, N'Microsoft Synapse -2', N'Make Sure the Synapse secure with EndPoints', 1, CAST(N'2025-09-25T12:50:25.393' AS DateTime))
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Project] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Role] ON 
+GO
+INSERT [dbo].[Sundar_tbl_Role] ([Role_ID], [RoleName], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (1, N'User', 0, 1, CAST(N'2025-09-17T11:49:42.253' AS DateTime), NULL, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_Role] ([Role_ID], [RoleName], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (2, N'Admin', 0, 1, CAST(N'2025-09-17T11:49:42.253' AS DateTime), NULL, NULL, NULL)
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_Role] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_UserDetails] ON 
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (1, N'Admin', N'1234567890', N'admin@gmail.com', N'Jaipur', N'9D39DD891B174041B3488557421FAE0F8D551E1F612725717D820BDBB111530F', 0, 1, CAST(N'2025-09-17T11:51:34.987' AS DateTime), NULL, CAST(N'2025-09-29T10:49:25.333' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (2, N'Sundar Saran', N'9024754383', N'sundarsaran@rathi.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 1, CAST(N'2025-09-17T12:10:34.740' AS DateTime), NULL, CAST(N'2025-10-09T16:51:20.423' AS DateTime), 2)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (3, N'sanyam', N'5678901234', N'sanyam@rathi.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 1, CAST(N'2025-09-17T17:32:11.897' AS DateTime), NULL, CAST(N'2025-09-26T10:01:33.597' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (4, N'Mahesh', N'8000669525', N'mahesh@gmail.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-17T17:50:11.320' AS DateTime), NULL, CAST(N'2025-10-09T16:48:41.400' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (5, N'aditya', N'1234567893', N'aditya@rathi.com', N'Ranchi', N'5A5A2923BD852F2950333C2178815EE464C46EC7CFD6E16E95C1DA23EF274AD2', 0, 1, CAST(N'2025-09-17T17:53:52.300' AS DateTime), NULL, NULL, NULL)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (6, N'Aditya sinha', N'9778901234', N'adityasinha@rathi.com', N'Ranchi', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-17T17:58:09.560' AS DateTime), NULL, CAST(N'2025-10-09T16:48:22.927' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (8, N'Sundar Saran', N'9024754388', N'sundarsaran@gmail.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-17T18:00:02.903' AS DateTime), 1, CAST(N'2025-10-09T16:48:16.823' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (9, N'Sundar S', N'9024754387', N'sundar@rathi.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-17T18:02:19.620' AS DateTime), 1, CAST(N'2025-10-09T16:48:12.520' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (12, N'Asha Ram', N'6375794973', N'asharamasharam@gmail.com', N'Jodhpur', N'5224414EA34C189A6A324A7B3708D8B27DD675C0CA5F234FAA21BE0FA60E72BA', 0, 0, CAST(N'2025-09-18T10:15:34.400' AS DateTime), 1, CAST(N'2025-10-09T16:48:04.937' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (13, N'dhoni', N'7123454321', N'dhoni@bcci.com', N'ranchi', N'1B18148C0CF9011ECC5B3DE030625B446AF5070E1CDB81DA5F78F66A8B427BA3', 0, 1, CAST(N'2025-09-18T10:27:45.683' AS DateTime), 1, CAST(N'2025-09-18T17:31:59.757' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (14, N'Sundar Bishnoi', N'7123454569', N'sundarsaran90@rathi.com', N'Jodhpur', N'D6DDB848787C754D4F9D39855F5D5ABE6E4AA7DFBCC16ADE1719278FDFFB5480', 0, 0, CAST(N'2025-09-24T17:31:55.687' AS DateTime), NULL, CAST(N'2025-10-09T16:47:46.173' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (15, N'Raju', N'9079100481', N'raju@gmail.com', N'Jodhpur', N'0EC4E1A734E831006618494F16BECEDC3BE12EBE8594031C7C6D45DA583EA4C1', 0, 0, CAST(N'2025-09-25T11:15:19.140' AS DateTime), NULL, CAST(N'2025-10-09T16:47:39.707' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (16, N'Op', N'9886708511', N'opvishnoi@gmail.com', N'Dublin', N'6793BC9C38C12153F5D62AF7B7EF07DDC7E955D5CF89E4D184B40014ED59CA9F', 0, 0, CAST(N'2025-09-25T11:19:58.740' AS DateTime), NULL, CAST(N'2025-10-09T16:47:58.307' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (17, N'Op', N'9886708512', N'opvishnoi12@gmail.com', N'Dublin', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-25T11:23:24.077' AS DateTime), NULL, CAST(N'2025-10-09T16:47:28.840' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (18, N'Sundar Saran', N'9983689981', N'samu@gmail.com', N'Jodhpur', N'557BE761896B39EDA53BA2F573735B65923750BE846C6AE5035D7F417DDF66D6', 0, 0, CAST(N'2025-09-25T11:31:33.273' AS DateTime), NULL, CAST(N'2025-10-09T16:47:33.610' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (19, N'Sundar Saran', N'9024759024', N'sundarsaran9024@rathi.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-25T12:03:51.833' AS DateTime), 1, CAST(N'2025-10-09T16:47:21.827' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (20, N'Sundar Saran', N'9024759075', N'sundarsaran902@rathi.com', N'Jodhpur', N'D6DDB848787C754D4F9D39855F5D5ABE6E4AA7DFBCC16ADE1719278FDFFB5480', 0, 0, CAST(N'2025-09-25T12:07:14.320' AS DateTime), 1, CAST(N'2025-10-09T16:47:15.577' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (21, N'Sundar Saran', N'9024757383', N'sundarsaran9@rathi.com', N'Jodhpur', N'D6DDB848787C754D4F9D39855F5D5ABE6E4AA7DFBCC16ADE1719278FDFFB5480', 0, 0, CAST(N'2025-09-25T12:17:18.710' AS DateTime), 1, CAST(N'2025-10-09T16:47:10.537' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (22, N'Sundar Saran', N'9024757783', N'sundarsaran98@rathi.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-25T12:18:02.227' AS DateTime), 1, CAST(N'2025-10-09T16:47:04.043' AS DateTime), 1)
+GO
+INSERT [dbo].[Sundar_tbl_UserDetails] ([User_ID], [FullName], [Mobile], [Email], [City], [Password], [is_Delete], [is_Active], [Created_Date], [Created_On], [Update_Date], [Update_on]) VALUES (23, N'Sundar Saran', N'9024764383', N'sundarsaran6@rathi.com', N'Jodhpur', N'770ACDB68E76A57A59CA796762654822E9960CE44EFFD6B254845F776892FC34', 0, 0, CAST(N'2025-09-25T12:27:57.880' AS DateTime), 1, CAST(N'2025-10-09T16:46:57.930' AS DateTime), 1)
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_UserDetails] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_UserProjects] ON 
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (1, 13, 5, CAST(N'2025-09-18T17:37:59.603' AS DateTime), N'Assigned', CAST(N'2025-10-03T16:17:17.247' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (2, 13, 1, CAST(N'2025-09-18T17:56:20.313' AS DateTime), N'Pending', CAST(N'2025-09-25T15:59:25.243' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (3, 2, 5, CAST(N'2025-09-19T09:58:34.717' AS DateTime), N'Assigned', CAST(N'2025-10-03T16:17:33.877' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (4, 2, 2, CAST(N'2025-09-25T12:34:10.820' AS DateTime), N'Pending', NULL)
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (5, 2, 4, CAST(N'2025-09-25T12:36:30.437' AS DateTime), N'Pending', CAST(N'2025-10-03T16:17:12.913' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (6, 2, 1, CAST(N'2025-09-25T12:36:40.240' AS DateTime), N'Assigned', CAST(N'2025-10-03T16:32:38.167' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (7, 2, 6, CAST(N'2025-09-25T16:11:40.450' AS DateTime), N'Assigned', CAST(N'2025-10-03T16:17:38.023' AS DateTime))
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (8, 2, 3, CAST(N'2025-09-25T16:13:42.883' AS DateTime), N'Pending', NULL)
+GO
+INSERT [dbo].[Sundar_tbl_UserProjects] ([UserProject_ID], [User_ID], [Project_ID], [Applied_Date], [Status], [Update_Date]) VALUES (9, 2, 7, CAST(N'2025-10-09T17:04:30.017' AS DateTime), N'Pending', NULL)
+GO
+SET IDENTITY_INSERT [dbo].[Sundar_tbl_UserProjects] OFF
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Email]    Script Date: 09-01-2026 17:37:17 ******/
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  CONSTRAINT [UQ_Email] UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [UQ_Mobile]    Script Date: 09-01-2026 17:37:17 ******/
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  CONSTRAINT [UQ_Mobile] UNIQUE NONCLUSTERED 
+(
+	[Mobile] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Access] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Access] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Access] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Lead] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Menu] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Menu] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Menu] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Project] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Project] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Role] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Role] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Role] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  DEFAULT ((0)) FOR [is_Delete]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  DEFAULT ((1)) FOR [is_Active]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserDetails] ADD  DEFAULT (getdate()) FOR [Created_Date]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects] ADD  DEFAULT (getdate()) FOR [Applied_Date]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects] ADD  DEFAULT ('Pending') FOR [Status]
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Access]  WITH NOCHECK ADD FOREIGN KEY([Role_ID])
+REFERENCES [dbo].[Sundar_tbl_Role] ([Role_ID])
+GO
+ALTER TABLE [dbo].[Sundar_tbl_Access]  WITH NOCHECK ADD FOREIGN KEY([User_ID])
+REFERENCES [dbo].[Sundar_tbl_UserDetails] ([User_ID])
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects]  WITH NOCHECK ADD FOREIGN KEY([Project_ID])
+REFERENCES [dbo].[Sundar_tbl_Project] ([Project_ID])
+GO
+ALTER TABLE [dbo].[Sundar_tbl_UserProjects]  WITH NOCHECK ADD FOREIGN KEY([User_ID])
+REFERENCES [dbo].[Sundar_tbl_UserDetails] ([User_ID])
+GO
+EXEC sys.sp_addextendedproperty @name=N'IsRequired', @value=0 , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'Sundar_tbl_Lead', @level2type=N'COLUMN',@level2name=N'Name'
+GO
