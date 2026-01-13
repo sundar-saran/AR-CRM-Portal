@@ -1,0 +1,113 @@
+﻿@model CRM_Buddies_Task.Models.UserDetails
+
+@{
+    ViewBag.Title = "Add New User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            padding: 2rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            color: #fff;
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+            box-shadow: 0 4px 15px rgba(76, 161, 175, 0.5);
+        }
+        body.dark-theme .page-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+            box-shadow: 0 4px 15px rgba(30, 30, 30, 0.7);
+        }
+        @@keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp 0.7s ease forwards;
+            animation-delay: 0.2s;
+        }
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-control {
+            border-radius: 0.5rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #4ca1af;
+            box-shadow: 0 0 8px rgba(76, 161, 175, 0.5);
+        }
+
+        .text-danger {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .btn + .btn {
+            margin-left: 0.75rem;
+        }
+    </style>
+}
+
+<div class="container fade-in mt-5" style="max-width: 600px;">
+    <div class="page-header text-center">
+        <h2>Add New User</h2>
+    </div>
+
+    @using (Html.BeginForm("AddUser", "Account", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger mb-4" })
+
+        <div class="mb-3">
+            <label for="FullName" class="form-label fw-semibold">Full Name</label>
+            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", id = "FullName", required = "required", placeholder = "Enter full name" })
+            @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            <label for="Email" class="form-label fw-semibold">Email</label>
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", id = "Email", required = "required", type = "email", placeholder = "example@mail.com" })
+            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            <label for="Mobile" class="form-label fw-semibold">Mobile</label>
+            @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control", id = "Mobile", required = "required", placeholder = "+1234567890" })
+            @Html.ValidationMessageFor(m => m.Mobile, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-3">
+            <label for="City" class="form-label fw-semibold">City</label>
+            @Html.TextBoxFor(m => m.City, new { @class = "form-control", id = "City", required = "required", placeholder = "Enter city" })
+            @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="mb-4">
+            <label for="Password" class="form-label fw-semibold">Password</label>
+            @Html.PasswordFor(m => m.Password, new { @class = "form-control", id = "Password", required = "required", placeholder = "Create a secure password" })
+            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                <i class="bi bi-person-plus me-1"></i> Create
+            </button>
+            <a href="@Url.Action("UserList", "Account")" class="btn btn-outline-secondary px-4 shadow-sm">
+                Cancel
+            </a>
+        </div>
+    }
+</div>

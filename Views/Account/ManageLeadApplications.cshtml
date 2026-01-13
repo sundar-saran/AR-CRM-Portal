@@ -1,0 +1,190 @@
+﻿@model List<CRM_Buddies_Task.Models.LeadApplicationViewModel>
+
+@{
+    ViewBag.Title = "Manage Lead Applications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            padding: 30px 20px;
+            border-radius: 12px;
+            color: #fff;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        body.dark-theme .page-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+            color: #fff;
+        }
+
+        @@keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #fff;
+            color: #000;
+        }
+
+            .custom-table thead th {
+                background-color: #0d6efd;
+                color: #fff;
+                font-weight: 600;
+                padding: 12px 20px;
+                text-align: left;
+            }
+
+            .custom-table tbody td {
+                padding: 12px 20px;
+                vertical-align: middle;
+                border: 1px solid #dee2e6;
+                color: #000;
+            }
+
+                .custom-table tbody td strong {
+                    color: #000;
+                }
+
+            .custom-table .text-muted {
+                color: #6c757d;
+            }
+
+            .custom-table tbody tr {
+                background-color: #f8f9fa;
+                transition: background-color 0.3s ease;
+            }
+
+                .custom-table tbody tr:hover {
+                    background-color: #dbe9ff;
+                }
+
+
+        .card {
+            border-radius: 10px;
+        }
+
+        .table-sm td,
+        .table-sm th {
+            padding: 0.5rem;
+        }
+
+        .alert i {
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+    </style>
+}
+
+
+
+<div class="container pt-5 fade-in">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">📋 @ViewBag.Title</h2>
+        <a href="@Url.Action("ManageLead", "Account")" class="btn btn-outline-light">
+            <i class="fas fa-table me-1"></i> Manage Lead Table
+        </a>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-info">@TempData["Message"]</div>
+    }
+
+    @if (Model != null && Model.Count > 0)
+    {
+        foreach (var item in Model)
+        {
+            var app = item.Application;
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Application #@app.Id</strong>
+                    </div>
+                    <div>
+                        <small>Applied: @app.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>User:</strong> @app.UserName<br />
+                            <strong>Email:</strong> @app.UserEmail
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 text-dark">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-dark">
+                                @foreach (var field in item.LeadData)
+                                {
+                                    <tr>
+                                        <td><strong>@field.Key</strong></td>
+                                        <td>
+                                            @if (field.Value != null && field.Value != DBNull.Value)
+                                            {
+                                                @field.Value.ToString()
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-inbox fa-2x mb-3"></i>
+            <h4>No lead applications found</h4>
+            <p>There are no pending lead applications to review.</p>
+        </div>
+    }
+</div>

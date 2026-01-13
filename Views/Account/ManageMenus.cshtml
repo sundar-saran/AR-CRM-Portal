@@ -1,0 +1,224 @@
+﻿@model List<CRM_Buddies_Task.Models.MenuModel>
+@using CRM_Buddies_Task.Models
+@{
+    ViewBag.Title = "Manage Menus";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            padding: 30px 20px;
+            border-radius: 12px;
+            color: #fff;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        body.dark-theme .page-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+        }
+
+        @@keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+            .custom-table thead {
+                background-color: #0d6efd;
+                color: #fff;
+            }
+
+                .custom-table thead th {
+                    padding: 12px 16px;
+                    text-align: left;
+                }
+
+            .custom-table tbody td {
+                padding: 12px 16px;
+                border-top: 1px solid #dee2e6;
+            }
+
+            .custom-table tbody tr:hover {
+                background-color: #e9f2ff;
+            }
+
+        .badge {
+            font-size: 0.85rem;
+            padding: 4px 8px;
+        }
+
+        body.dark-theme .custom-table {
+            background-color: #1e1e1e;
+            color: #f1f1f1;
+        }
+
+            body.dark-theme .custom-table thead {
+                background-color: #0b5ed7;
+            }
+
+            body.dark-theme .custom-table tbody td {
+                border-top: 1px solid #444;
+            }
+
+            body.dark-theme .custom-table tbody tr:hover {
+                background-color: #2e2e33;
+            }
+
+        body.dark-theme .badge.bg-success {
+            background-color: #198754 !important;
+        }
+
+        body.dark-theme .badge.bg-danger {
+            background-color: #dc3545 !important;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .alert i {
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4 fade-in">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">📋 @ViewBag.Title</h2>
+        <a href="@Url.Action("AddMenu", "Account")" class="btn btn-outline-light">
+            <i class="fas fa-plus"></i> Add New Menu
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Menu Name</th>
+                        <th>Menu URL</th>
+                        <th>Active</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var menu in Model)
+                    {
+                        <tr>
+                            <td>@menu.MenuId</td>
+                            <td>@Html.DisplayFor(m => menu.MenuName)</td>
+                            <td>@Html.DisplayFor(m => menu.MenuURL)</td>
+                            <td>
+                                @if (menu.IsActive)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">No</span>
+                                }
+                            </td>
+                            <td>@(menu.CreatedDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</td>
+                            <td>
+                                <a href="@Url.Action("EditMenu", "Account", new { id = menu.MenuId })"
+                                   class="btn btn-sm btn-warning me-1"
+                                   title="Edit Menu">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-4 text-center">
+            <i class="fas fa-info-circle fa-2x"></i>
+            <h5 class="mt-2">No menus found.</h5>
+            <p>Click "Add New Menu" to create your first menu item.</p>
+        </div>
+    }
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+@{
+    var success = TempData["SuccessMessage"] ?? "";
+    var error = TempData["ErrorMessage"] ?? "";
+}
+
+<script>
+    (function () {
+        var success = @Html.Raw(Json.Encode(success));
+        var error = @Html.Raw(Json.Encode(error));
+
+        function showPopup(msg, bgColor) {
+            if (!msg) return;
+            var popup = document.createElement('div');
+            popup.textContent = msg;
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.background = bgColor || '#4CAF50';
+            popup.style.color = '#fff';
+            popup.style.padding = '10px 14px';
+            popup.style.borderRadius = '6px';
+            popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            popup.style.zIndex = 99999;
+            popup.style.fontSize = '13px';
+            document.body.appendChild(popup);
+
+            setTimeout(function () {
+                popup.style.transition = "opacity 0.5s";
+                popup.style.opacity = 0;
+                setTimeout(function () { popup.remove(); }, 500);
+            }, 2000);
+        }
+
+        if (success) showPopup(success, '#4CAF50');
+        else if (error) showPopup(error, '#E53935');
+    })();
+</script>
