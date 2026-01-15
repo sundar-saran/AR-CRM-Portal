@@ -222,7 +222,10 @@
     <Compile Include="Models\MenuModel.cs" />
     <Compile Include="Models\UserList.cs" />
     <Compile Include="Models\UserModel.cs" />
+    <Compile Include="Models\UserProjectEmailModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\EmailTemplates.cs" />
+    <Compile Include="Utilities\EmailUtility.cs" />
     <Content Include="Views\Account\ManageProjectApplications.cshtml" />
     <Content Include="Views\Account\AddUser.cshtml" />
     <Content Include="Views\Account\AddProject.cshtml" />

@@ -34,13 +34,16 @@ namespace CRM_Buddies_Task.Models
         [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-
+        public int? ReportingTo { get; set; }
+        public string ReportingManager { get; set; }
         public bool is_Delete { get; set; }
         public bool is_Active { get; set; }
 
         [Display(Name = "Created Date")]
         [DisplayFormat(DataFormatString = "{0:dd-MMM-yyyy}")]
         public DateTime? Created_Date { get; set; }
+        public int Role_Id { get; set; }
+
     }
 
 
@@ -68,7 +71,8 @@ namespace CRM_Buddies_Task.Models
         [Required]
         [EmailAddress]
         public string Email { get; set; }
-
+        public int? ReportingTo { get; set; }
+        public string ReportingManager { get; set; }
         public string City { get; set; }
 
         public bool IsActive { get; set; }

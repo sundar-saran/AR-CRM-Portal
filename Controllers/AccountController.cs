@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using CRM_Buddies_Task.Utilities;
 
 namespace CRM_Buddies_Task.Controllers
 {
@@ -265,13 +266,17 @@ namespace CRM_Buddies_Task.Controllers
             int userId = (int)Session["UserId"];
             var user = _dbHelper.GetUserProfile(userId);
 
+            LoadReportingManagers();
+
             var model = new EditProfileViewModel
             {
                 UserId = userId,
                 FullName = user.FullName,
                 City = user.City,
-                Mobile = user.Mobile
+                Mobile = user.Mobile,
+                ReportingTo = user.ReportingTo
             };
+
 
             return View(model);
         }
@@ -359,6 +364,8 @@ namespace CRM_Buddies_Task.Controllers
             if (user == null)
                 return HttpNotFound();
 
+            LoadReportingManagers();
+
             var viewModel = new UserDetailsViewModel
             {
                 UserId = user.UserId,
@@ -366,8 +373,10 @@ namespace CRM_Buddies_Task.Controllers
                 Mobile = user.Mobile,
                 Email = user.Email,
                 City = user.City,
-                IsActive = user.is_Active
+                IsActive = user.is_Active,
+                ReportingTo = user.ReportingTo   
             };
+
 
             return View(viewModel);
         }
@@ -405,8 +414,10 @@ namespace CRM_Buddies_Task.Controllers
             if (Session["UserId"] == null)
                 return RedirectToAction("Login");
 
+            LoadReportingManagers();
             return View(new UserDetails());
         }
+
 
 
         /// <summary>
@@ -419,7 +430,10 @@ namespace CRM_Buddies_Task.Controllers
         public ActionResult AddUser(UserDetails model)
         {
             if (!ModelState.IsValid)
+            {
+                LoadReportingManagers();
                 return View(model);
+            }
 
             try
             {
@@ -550,6 +564,25 @@ namespace CRM_Buddies_Task.Controllers
                 }
 
                 _dbHelper.ApplyToProject(userId, projectId);
+                // -------- SEND EMAIL TO REPORTING MANAGER --------
+                int managerId = _dbHelper.GetReportingManagerId(userId);
+
+                string managerEmail = _dbHelper.GetUserEmail(managerId);
+                string managerName = _dbHelper.GetUserFullName(managerId);
+                string employeeName = _dbHelper.GetUserFullName(userId);
+                string projectName = _dbHelper.GetProjectName(projectId);
+
+                string body = EmailTemplates.ProjectApplied(
+                    managerName,
+                    employeeName,
+                    projectName
+                );
+
+                EmailUtility.SendEmail(
+                    managerEmail,
+                    "New Project Application",
+                    body
+                );
                 TempData["SuccessMessage"] = "Applied successfully!";
             }
             catch (Exception ex)
@@ -623,6 +656,22 @@ namespace CRM_Buddies_Task.Controllers
                 return RedirectToAction("Login");
 
             _dbHelper.UpdateUserProjectStatus(userProjectId, status);
+            // -------- SEND EMAIL TO USER --------
+            var details = _dbHelper.GetUserProjectApplicationById(userProjectId);
+
+            string userEmail = details.UserEmail;
+            string userName = details.UserName;
+            string projectName = details.ProjectName;
+
+            string body = status == "Assigned"
+                ? EmailTemplates.ProjectApproved(userName, projectName)
+                : EmailTemplates.ProjectRejected(userName, projectName);
+
+            EmailUtility.SendEmail(
+                userEmail,
+                "Project Application Status Update",
+                body
+            );
             TempData["Message"] = status == "Assigned" ? "Project assigned successfully!" : "Project unassigned successfully!";
             return RedirectToAction("ManageProjectApplications");
         }
@@ -1083,6 +1132,21 @@ namespace CRM_Buddies_Task.Controllers
             }
 
             return Json(new { token }, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// Load the reporting manager name and id for the use better experiance
+        /// </summary>
+        private void LoadReportingManagers()
+        {
+            ViewBag.ReportingManagers = _dbHelper.GetAllUsers()
+                .Where(u => u.Role_Id == 2 && u.is_Active)
+                .Select(u => new SelectListItem
+                {
+                    Value = u.User_ID.ToString(),
+                    Text = u.FullName
+                })
+                .ToList();
         }
     }
 }

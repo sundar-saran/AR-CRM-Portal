@@ -64,7 +64,9 @@ namespace CRM_Buddies_Task.Models
                     cmd.Parameters.AddWithValue("@City", user.City ?? "");
                     cmd.Parameters.AddWithValue("@Password", user.Password);
                     cmd.Parameters.AddWithValue("@Role_Id", user.Role_Id);
+                    cmd.Parameters.AddWithValue("@ReportingTo", (object)user.ReportingTo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@CreatedOn", DBNull.Value);
+
 
                     conn.Open();
 
@@ -157,6 +159,11 @@ namespace CRM_Buddies_Task.Models
                             user.City = reader["City"].ToString();
                             user.CreatedDate = Convert.ToDateTime(reader["Created_Date"]);
                             user.RoleName = reader["RoleName"].ToString();
+                            user.ReportingTo = reader["ReportingTo"] == DBNull.Value
+                                                ? null
+                                                : (int?)Convert.ToInt32(reader["ReportingTo"]);
+
+                            user.ReportingManager = reader["ReportingManager"]?.ToString();
                         }
                     }
                 }
@@ -181,6 +188,7 @@ namespace CRM_Buddies_Task.Models
                     cmd.Parameters.AddWithValue("@FullName", model.FullName);
                     cmd.Parameters.AddWithValue("@Mobile", model.Mobile);
                     cmd.Parameters.AddWithValue("@City", model.City ?? "");
+                    cmd.Parameters.AddWithValue("@ReportingTo", (object)model.ReportingTo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@UpdaterId", model.UserId);
 
                     conn.Open();
@@ -215,8 +223,13 @@ namespace CRM_Buddies_Task.Models
                                 Mobile = reader["Mobile"].ToString(),
                                 Email = reader["Email"].ToString(),
                                 City = reader["City"].ToString(),
-                                is_Active = Convert.ToBoolean(reader["is_Active"])
+                                is_Active = Convert.ToBoolean(reader["is_Active"]),
+                                ReportingTo = reader["ReportingTo"] == DBNull.Value
+                                        ? null
+                                        : (int?)Convert.ToInt32(reader["ReportingTo"]),
+                                ReportingManager = reader["ReportingManager"]?.ToString()
                             };
+
                         }
                     }
                 }
@@ -254,8 +267,13 @@ namespace CRM_Buddies_Task.Models
                                     Email = reader["Email"].ToString(),
                                     City = reader["City"].ToString(),
                                     is_Active = Convert.ToBoolean(reader["is_Active"]),
-                                    Created_Date = reader["Created_Date"] as DateTime?
+                                    Created_Date = reader["Created_Date"] as DateTime?,
+                                    ReportingTo = reader["ReportingTo"] == DBNull.Value
+                                        ? null
+                                        : (int?)Convert.ToInt32(reader["ReportingTo"]),
+                                    ReportingManager = reader["ReportingManager"]?.ToString()
                                 });
+
                             }
                         }
                     }
@@ -283,6 +301,8 @@ namespace CRM_Buddies_Task.Models
                     cmd.Parameters.AddWithValue("@City", model.City ?? "");
                     cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
                     cmd.Parameters.AddWithValue("@UpdaterId", HttpContext.Current.Session["UserId"] ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ReportingTo", (object)model.ReportingTo ?? DBNull.Value);
+
 
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
@@ -314,6 +334,7 @@ namespace CRM_Buddies_Task.Models
                     cmd.Parameters.AddWithValue("@Mobile", user.Mobile);
                     cmd.Parameters.AddWithValue("@City", user.City);
                     cmd.Parameters.AddWithValue("@Password", user.Password);
+                    cmd.Parameters.AddWithValue("@ReportingTo", (object)user.ReportingTo ?? DBNull.Value);
 
                     con.Open();
 
@@ -570,33 +591,44 @@ namespace CRM_Buddies_Task.Models
         public List<ProjectModel> GetAppliedProjects(int userId)
         {
             var applied = new List<ProjectModel>();
-            using (var conn = new SqlConnection(connStr))
-            {
-                using (var cmd = new SqlCommand("sp_Sundar_CRM_Project", conn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Action", "ManageUserProjects");
-                    cmd.Parameters.AddWithValue("@UserId", userId);
 
-                    conn.Open();
-                    using (var reader = cmd.ExecuteReader())
+            using (var conn = new SqlConnection(connStr))
+            using (var cmd = new SqlCommand("sp_Sundar_CRM_Project", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@Action", "ManageUserProjects");
+                cmd.Parameters.AddWithValue("@UserId", userId);
+
+                conn.Open();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        if (reader["ResultType"]?.ToString() == "UserProjects")
                         {
-                            if (reader["ResultType"].ToString() == "UserProjects")
+                            applied.Add(new ProjectModel
                             {
-                                applied.Add(new ProjectModel
-                                {
-                                    ProjectId = (int)reader["Project_ID"],
-                                    ProjectName = reader["ProjectName"].ToString(),
-                                    Description = reader["Description"].ToString(),
-                                    Status = reader["Status"].ToString()
-                                });
-                            }
+                                ProjectId = reader["Project_ID"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToInt32(reader["Project_ID"]),
+
+                                ProjectName = reader["ProjectName"] == DBNull.Value
+                                    ? string.Empty
+                                    : reader["ProjectName"].ToString(),
+
+                                Description = reader["Description"] == DBNull.Value
+                                    ? string.Empty
+                                    : reader["Description"].ToString(),
+
+                                Status = reader["Status"] == DBNull.Value
+                                    ? "Pending"
+                                    : reader["Status"].ToString()
+                            });
                         }
                     }
                 }
             }
+
             return applied;
         }
 
@@ -1319,7 +1351,6 @@ namespace CRM_Buddies_Task.Models
         }
 
 
-
         /// <summary>
         /// Retrieves detailed data for a specific lead application.
         /// </summary>
@@ -1345,8 +1376,6 @@ namespace CRM_Buddies_Task.Models
             }
             return details;
         }
-
-
 
 
         /// <summary>
@@ -1377,5 +1406,97 @@ namespace CRM_Buddies_Task.Models
             }
             return dt;
         }
+
+        public string GetUserEmail(int userId)
+        {
+            string email = "";
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                string query = "SELECT Email FROM Sundar_tbl_UserDetails WHERE User_ID = @UserId";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@UserId", userId);
+                con.Open();
+                email = Convert.ToString(cmd.ExecuteScalar());
+            }
+            return email;
+        }
+
+        //public string GetUserFullName(int userId)
+        //{
+        //    string name = "";
+        //    using (SqlConnection con = new SqlConnection(connStr))
+        //    {
+        //        string query = "SELECT FullName FROM Sundar_tbl_UserDetails WHERE User_ID = @UserId";
+        //        SqlCommand cmd = new SqlCommand(query, con);
+        //        cmd.Parameters.AddWithValue("@UserId", userId);
+        //        con.Open();
+        //        name = Convert.ToString(cmd.ExecuteScalar());
+        //    }
+        //    return name;
+        //}
+        public string GetProjectName(int projectId)
+        {
+            string projectName = "";
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                string query = "SELECT ProjectName FROM Sundar_tbl_Projects WHERE ProjectId = @ProjectId";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@ProjectId", projectId);
+                con.Open();
+                projectName = Convert.ToString(cmd.ExecuteScalar());
+            }
+            return projectName;
+        }
+        public int GetReportingManagerId(int userId)
+        {
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                string query = "SELECT ReportingTo FROM Sundar_tbl_UserDetails WHERE User_ID = @UserId";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@UserId", userId);
+
+                con.Open();
+                object result = cmd.ExecuteScalar();
+
+                return result == DBNull.Value || result == null
+                    ? 0
+                    : Convert.ToInt32(result);
+            }
+        }
+        public UserProjectEmailModel GetUserProjectApplicationById(int userProjectId)
+        {
+            UserProjectEmailModel model = new UserProjectEmailModel();
+
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                string query = @"
+            SELECT 
+                u.User_ID,
+                u.Email,
+                u.FullName,
+                p.ProjectName
+            FROM Sundar_tbl_UserProjects up
+            INNER JOIN Sundar_tbl_UserDetails u ON up.UserId = u.User_ID
+            INNER JOIN Sundar_tbl_Projects p ON up.ProjectId = p.ProjectId
+            WHERE up.UserProjectId = @UserProjectId";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@UserProjectId", userProjectId);
+
+                con.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    model.UserId = Convert.ToInt32(reader["User_ID"]);
+                    model.UserEmail = reader["Email"].ToString();
+                    model.UserName = reader["FullName"].ToString();
+                    model.ProjectName = reader["ProjectName"].ToString();
+                }
+            }
+
+            return model;
+        }
+
     }
 }

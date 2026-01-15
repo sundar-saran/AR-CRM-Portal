@@ -17,7 +17,8 @@ namespace CRM_Buddies_Task.Models
         [Required(ErrorMessage = "Mobile number is required")]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Mobile number must be exactly 10 digits")]
         public string Mobile { get; set; }
-
+        public int? ReportingTo { get; set; }
+        public string ReportingManager { get; set; }
         public string City { get; set; }
     }
 

@@ -54,6 +54,13 @@ namespace CRM_Buddies_Task.Models.Interfaces
         (bool success, string message) InsertLead(int userId, string leadJson);
         List<Dictionary<string, object>> GetLeads(int? userId = null);
         List<LeadApplicationViewModel> GetAllLeadApplicationsWithDetails();
+
+        string GetUserEmail(int userId);
+        //string GetUserFullName(int userId);
+        string GetProjectName(int projectId);
+        int GetReportingManagerId(int userId);
+        UserProjectEmailModel GetUserProjectApplicationById(int userProjectId);
+
     }
 
 }

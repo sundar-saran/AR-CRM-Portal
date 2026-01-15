@@ -32,6 +32,8 @@ namespace CRM_Buddies_Task.Models
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
+        public int? ReportingTo { get; set; }
+        public string ReportingManager { get; set; }
 
         public int Role_Id { get; set; } = 1;
         public DateTime CreatedDate { get; set; }
