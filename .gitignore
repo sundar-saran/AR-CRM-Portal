@@ -1,7 +1,10 @@
 bin/
 obj/
 .vs/
+packages/
 *.user
 *.suo
+*.cache
 *.log
 web.config
+appsettings.json
