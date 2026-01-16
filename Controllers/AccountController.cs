@@ -563,7 +563,10 @@ namespace CRM_Buddies_Task.Controllers
                     return RedirectToAction("ProjectApply");
                 }
 
+
                 _dbHelper.ApplyToProject(userId, projectId);
+
+                TempData["SuccessMessage"] = "Applied successfully!";
                 // -------- SEND EMAIL TO REPORTING MANAGER --------
                 int managerId = _dbHelper.GetReportingManagerId(userId);
 
@@ -583,7 +586,9 @@ namespace CRM_Buddies_Task.Controllers
                     "New Project Application",
                     body
                 );
-                TempData["SuccessMessage"] = "Applied successfully!";
+
+                TempData["SuccessMessage"] = "Mail sent to: " + managerEmail;
+
             }
             catch (Exception ex)
             {

@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -40,7 +39,6 @@ namespace CRM_Buddies_Task.Models
                 return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
             }
         }
-
 
 
         // ====================================================================
@@ -96,7 +94,6 @@ namespace CRM_Buddies_Task.Models
                 }
             }
         }
-
 
 
         /// <summary>
@@ -1420,26 +1417,12 @@ namespace CRM_Buddies_Task.Models
             }
             return email;
         }
-
-        //public string GetUserFullName(int userId)
-        //{
-        //    string name = "";
-        //    using (SqlConnection con = new SqlConnection(connStr))
-        //    {
-        //        string query = "SELECT FullName FROM Sundar_tbl_UserDetails WHERE User_ID = @UserId";
-        //        SqlCommand cmd = new SqlCommand(query, con);
-        //        cmd.Parameters.AddWithValue("@UserId", userId);
-        //        con.Open();
-        //        name = Convert.ToString(cmd.ExecuteScalar());
-        //    }
-        //    return name;
-        //}
         public string GetProjectName(int projectId)
         {
             string projectName = "";
             using (SqlConnection con = new SqlConnection(connStr))
             {
-                string query = "SELECT ProjectName FROM Sundar_tbl_Projects WHERE ProjectId = @ProjectId";
+                string query = "SELECT ProjectName FROM Sundar_tbl_Project WHERE Project_Id = @ProjectId";
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@ProjectId", projectId);
                 con.Open();
@@ -1476,9 +1459,9 @@ namespace CRM_Buddies_Task.Models
                 u.FullName,
                 p.ProjectName
             FROM Sundar_tbl_UserProjects up
-            INNER JOIN Sundar_tbl_UserDetails u ON up.UserId = u.User_ID
-            INNER JOIN Sundar_tbl_Projects p ON up.ProjectId = p.ProjectId
-            WHERE up.UserProjectId = @UserProjectId";
+            INNER JOIN Sundar_tbl_UserDetails u ON up.User_Id = u.User_ID
+            INNER JOIN Sundar_tbl_Project p ON up.Project_Id = p.Project_Id
+            WHERE up.UserProject_Id = @UserProjectId";
 
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@UserProjectId", userProjectId);
