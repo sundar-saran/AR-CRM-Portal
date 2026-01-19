@@ -113,26 +113,32 @@
             <div class="profile-card shadow-sm fade-in">
 
                 <div class="row mb-3">
-                    <div class="col-sm-4 theme-label">📧 Email:</div>
+                    <div class="col-sm-4 theme-label"> Email:</div>
                     <div class="col-sm-8">@Model.Email</div>
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-sm-4 theme-label">📱 Mobile:</div>
+                    <div class="col-sm-4 theme-label"> Mobile:</div>
                     <div class="col-sm-8">@Model.Mobile</div>
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-sm-4 theme-label">🏙️ City:</div>
+                    <div class="col-sm-4 theme-label"> City:</div>
                     <div class="col-sm-8">@Model.City</div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-sm-4 theme-label">🏙️ Reporting Manager</div>
-                    <div class="col-sm-8">@Model.ReportingManager - @Model.ReportingTo</div>
-                </div>
+                @if (Model.ReportingTo.HasValue && Model.ReportingTo.Value > 0)
+                {
+                    <div class="row mb-3">
+                        <div class="col-sm-4 theme-label"> Reporting Manager And Id:</div>
+                        <div class="col-sm-8">
+                            @Model.ReportingManager (@Model.ReportingTo)
+                        </div>
+                    </div>
+                }
+
 
                 <div class="row mb-3">
-                    <div class="col-sm-4 theme-label">🗓️ Registered On:</div>
+                    <div class="col-sm-4 theme-label"> Registered On:</div>
                     <div class="col-sm-8">@Model.CreatedDate.ToString("dd-MMM-yyyy")</div>
                 </div>
 
