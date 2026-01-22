@@ -401,6 +401,510 @@
             #main-content { margin: 0 !important; padding: 1cm !important; }
         }
 
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        background-color: #fff;
+    }
+
+    body.dark-theme .custom-table {
+        background-color: #1e1e1e;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    }
+
+    .custom-table thead th {
+        background-color: #0d6efd;
+        color: #fff;
+        font-weight: 600;
+        padding: 12px 20px;
+        text-align: left;
+        border-bottom: 2px solid #0b5ed7;
+    }
+
+    body.dark-theme .custom-table thead th {
+        background-color: #0b5ed7;
+        border-bottom-color: #084298;
+    }
+
+    .custom-table tbody td {
+        padding: 12px 20px;
+        vertical-align: middle;
+    }
+
+    .custom-table tbody tr {
+        transition: background-color 0.3s ease;
+    }
+
+        .custom-table tbody tr:nth-child(odd) {
+            background-color: #f8f9fa;
+        }
+
+    body.dark-theme .custom-table tbody tr:nth-child(odd) {
+        background-color: #2a2a2d;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #dbe9ff;
+    }
+
+    body.dark-theme .custom-table tbody tr:hover {
+        background-color: #3a3a3d;
+    }
+
+
+    /* =========================
+   WELCOME PAGE STYLES
+========================= */
+
+.welcome-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.welcome-header h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+}
+
+.welcome-header p {
+    font-size: 1.05rem;
+    opacity: 0.85;
+}
+
+/* Card styling */
+.welcome-card {
+    background: var(--bs-light);
+    border-radius: 14px;
+    padding: 30px 25px;
+    text-align: center;
+    transition: all 0.35s ease;
+    height: 100%;
+}
+
+body.dark-theme .welcome-card {
+    background: #2c2c2e;
+}
+
+.welcome-card i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.welcome-card h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.welcome-card p {
+    font-size: 0.95rem;
+    opacity: 0.85;
+}
+
+.welcome-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+/* Animation */
+.fade-up {
+    opacity: 0;
+    transform: translateY(25px);
+    animation: fadeUp 0.8s ease forwards;
+}
+
+@@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .welcome-header h1 {
+        font-size: 1.6rem;
+    }
+}
+
+/* =========================
+   ADMIN DASHBOARD STYLES
+========================= */
+
+/* Animation */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.dashboard-header {
+    border-radius: 14px;
+    padding: 30px;
+    color: #fff;
+    background: linear-gradient(270deg, #4ca1af, #2c82c9);
+    background-size: 400% 400%;
+    animation: gradientShift 12s ease infinite;
+}
+
+@@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Dark mode header */
+body.dark-theme .dashboard-header {
+    background: linear-gradient(270deg, #1f1f22, #2b2b30);
+}
+
+/* Cards */
+.dashboard-card {
+    border-radius: 14px;
+    transition: all 0.35s ease;
+    height: 100%;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Light Theme */
+body.light-theme .dashboard-card {
+    background-color: #ffffff;
+    color: #212529;
+}
+
+/* Dark Theme */
+body.dark-theme .dashboard-card {
+    background-color: #2c2c2e;
+    color: #ffffff;
+}
+
+/* Card Titles */
+.dashboard-card .card-title {
+    font-weight: 600;
+}
+
+/* Buttons */
+.dashboard-btn {
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+}
+
+/* Light */
+body.light-theme .dashboard-btn {
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+}
+
+body.light-theme .dashboard-btn:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+/* Dark */
+body.dark-theme .dashboard-btn {
+    border: 1px solid #ffc107;
+    color: #ffc107;
+}
+
+body.dark-theme .dashboard-btn:hover {
+    background-color: #ffc107;
+    color: #000;
+}
+
+    /* =========================
+   COMMON PAGE HEADER
+========================= */
+
+    .page-header {
+        border-radius: 14px;
+        padding: 28px;
+        color: #fff;
+        background: linear-gradient(270deg, #4ca1af, #2c82c9);
+        background-size: 400% 400%;
+        animation: gradientShift 12s ease infinite;
+    }
+
+    body.dark-theme .page-header {
+        background: linear-gradient(270deg, #1f1f22, #2b2b30);
+    }
+
+    /* =========================
+   COMMON TABLE DESIGN
+========================= */
+
+    .custom-table {
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+        /* Table header */
+        .custom-table thead th {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+    /* Light theme */
+    body.light-theme .custom-table {
+        background-color: #ffffff;
+    }
+
+        body.light-theme .custom-table thead th {
+            background-color: #f1f3f5;
+            color: #212529;
+        }
+
+    /* Dark theme */
+    body.dark-theme .custom-table {
+        background-color: #2c2c2e;
+        color: #ffffff;
+    }
+
+        body.dark-theme .custom-table thead th {
+            background-color: #1f1f22;
+            color: #ffffff;
+        }
+
+    /* Table rows */
+    .custom-table tbody tr {
+        transition: background-color 0.25s ease;
+    }
+
+    body.light-theme .custom-table tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    body.dark-theme .custom-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    /* =========================
+   BADGES
+========================= */
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+
+    /* =========================
+   ACTION BUTTONS
+========================= */
+
+    .table-action-btn {
+        border-radius: 50%;
+        padding: 6px 9px;
+    }
+
+    body.light-theme .table-action-btn {
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+        body.light-theme .table-action-btn:hover {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+
+    body.dark-theme .table-action-btn {
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+
+        body.dark-theme .table-action-btn:hover {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+    /* =========================
+   PRIMARY ACTION BUTTON
+========================= */
+
+    .primary-action-btn {
+        border-radius: 24px;
+        padding: 8px 18px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+
+        .primary-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }
+
+        /* =========================
+   INLINE FORM (TABLE)
+========================= */
+
+.inline-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 190px;
+}
+
+/* Select dropdown */
+.inline-form select.form-select {
+    font-size: 0.85rem;
+    padding: 6px 8px;
+    border-radius: 10px;
+}
+
+/* Update button */
+.inline-form .btn-update {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.inline-form .btn-update:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Light theme */
+body.light-theme .inline-form .btn-update {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+/* Dark theme */
+body.dark-theme .inline-form .btn-update {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* =========================
+   RESPONSIVE TABLE FORM
+========================= */
+
+@@media (max-width: 768px) {
+    .inline-form {
+        max-width: 100%;
+    }
+}
+
+    /* =========================
+   ACCESS PAGE ENHANCEMENTS
+========================= */
+
+    .access-count-badge {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        border-radius: 20px;
+    }
+
+    .access-menus {
+        font-size: 0.75rem;
+        opacity: 0.85;
+        line-height: 1.4;
+    }
+
+    /* Light theme */
+    body.light-theme .access-menus {
+        color: #495057;
+    }
+
+    /* Dark theme */
+    body.dark-theme .access-menus {
+        color: #adb5bd;
+    }
+    /* ===== GLOBAL PAGE HEADER ===== */
+    .page-header {
+        background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+        background-size: 400% 400%;
+        animation: gradientShift 10s ease infinite;
+        padding: 30px;
+        border-radius: 14px;
+        color: #fff;
+        margin-bottom: 2rem;
+    }
+
+    body.dark-theme .page-header {
+        background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+    }
+
+    @@keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* ===== FADE IN EFFECT ===== */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @@keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== CUSTOM TABLE ===== */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .custom-table thead {
+        background: #f8f9fa;
+    }
+
+    .custom-table th {
+        padding: 14px;
+        font-weight: 600;
+        color: #495057;
+        text-transform: uppercase;
+        font-size: 13px;
+    }
+
+    .custom-table td {
+        padding: 14px;
+        vertical-align: middle;
+    }
+
+    .custom-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+
+    /* ===== BUTTON EFFECTS ===== */
+    .btn-success {
+        transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+        background-color: #198754;
+        box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
+        transform: translateY(-1px);
+    }
+
 </style>
 </head>
 

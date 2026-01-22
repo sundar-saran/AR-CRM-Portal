@@ -5,167 +5,92 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section Styles {
-    <style>
-        .page-header {
-            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-            padding: 30px;
-            border-radius: 12px;
-            color: #fff;
-        }
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
 
-        body.dark-theme .page-header {
-            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
-        }
-
-        @@keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        @@keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .custom-table {
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .custom-table thead th {
-            background-color: #f8f9fa;
-            color: #212529;
-            font-weight: 600;
-        }
-
-        body.dark-theme .custom-table thead th {
-            background-color: #2a2a2d;
-            color: #fff;
-        }
-
-        .custom-table tbody tr {
-            transition: background 0.3s ease;
-        }
-
-        .custom-table tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        body.light-theme .custom-table tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.03);
-        }
-
-        .badge {
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-
-        body.light-theme .btn-outline-info {
-            color: #0d6efd;
-            border-color: #0d6efd;
-        }
-
-        body.light-theme .btn-outline-info:hover {
-            background-color: #0d6efd;
-            color: #fff;
-        }
-
-        .btn-success:hover {
-            background-color: #198754;
-            box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
-        }
-    </style>
-}
-
-<div class="main-wrapper theme-sensitive-text pt-5 fade-in">
-    <div class="container-fluid">
-        <div class="row mb-4 align-items-center">
-            <div class="col">
-                <div class="page-header shadow-sm">
-                    <h2 class="display-6 mb-2">
-                        <i class="bi bi-people-fill me-2"></i> User Management
-                    </h2>
-                    <p class="mb-0">Here admin can manage all registered users.</p>
-                </div>
-            </div>
-            <div class="col text-end mt-3 mt-md-0">
-                <a href="@Url.Action("AddUser", "Account")" class="btn btn-success shadow-sm">
-                    <i class="bi bi-person-plus-fill me-1"></i> Add New User
-                </a>
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-people-fill me-2"></i> User Management
+                </h2>
+                <p class="mb-0">
+                    Manage registered users and their account status
+                </p>
             </div>
         </div>
 
-        <div class="table-responsive fade-in">
-            <table class="table table-hover table-bordered custom-table bg-dark text-white">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Mobile</th>
-                        <th>City</th>
-                        <th>Status</th>
-                        <th>Created Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Count > 0)
-                    {
-                        int count = 1;
-                        foreach (var user in Model)
-                        {
-                            <tr>
-                                <td>@count</td>
-                                <td>@user.FullName</td>
-                                <td>@user.Email</td>
-                                <td>@user.Mobile</td>
-                                <td>@user.City</td>
-                                <td>
-                                    @if (user.is_Active)
-                                    {
-                                        <span class="badge bg-success">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">Inactive</span>
-                                    }
-                                </td>
-                                <td>@user.Created_Date</td>
-                                <td>
-                                    <a href="@Url.Action("EditUser", "Account", new { id = user.User_ID })"
-                                       class="btn btn-sm btn-outline-info" title="Edit User">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            count++;
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="8" class="text-center">No users found.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="@Url.Action("AddUser", "Account")"
+               class="btn btn-success primary-action-btn shadow-sm">
+                <i class="bi bi-person-plus-fill me-1"></i> Add New User
+            </a>
         </div>
     </div>
+
+    <!-- Table -->
+    <div class="table-responsive shadow-sm fade-in">
+        <table class="table-hover custom-table mb-0">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>City</th>
+                    <th>Status</th>
+                    <th>Created On</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int count = 1;
+                    foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@count</td>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@user.Mobile</td>
+                            <td>@user.City</td>
+                            <td>
+                                @if (user.is_Active)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+                            <td>@user.Created_Date</td>
+                            <td class="text-center">
+                                <a href="@Url.Action("EditUser", "Account", new { id = user.User_ID })"
+                                   class="btn btn-sm btn-outline-primary table-action-btn"
+                                   title="Edit User">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        count++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            No users found
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
 
 @{
     var success = TempData["SuccessMessage"] ?? "";

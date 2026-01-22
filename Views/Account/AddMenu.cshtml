@@ -1,108 +1,43 @@
 ﻿@model CRM_Buddies_Task.Models.MenuModel
 
 @{
-    ViewBag.Title = (Model != null && Model.MenuId > 0) ? "Edit Menu" : "Add New Menu";
+    bool isEdit = Model != null && Model.MenuId > 0;
+    ViewBag.Title = isEdit ? "Edit Menu" : "Add New Menu";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section Styles {
-    <style>
-        .page-header {
-            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-            padding: 30px 20px;
-            border-radius: 12px;
-            color: #fff;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
 
-        body.dark-theme .page-header {
-            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
-        }
+    <!-- HEADER -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-menu-button-wide me-2"></i> @ViewBag.Title
+                </h2>
+                <p class="mb-0">
+                    @(isEdit ? "Update menu information and status" : "Create a new navigation menu")
+                </p>
+            </div>
+        </div>
 
-        @@keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        @@keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card {
-            border-radius: 10px;
-        }
-
-        .card-body label {
-            font-weight: 500;
-        }
-
-        body.dark-theme .form-control,
-        body.dark-theme .form-control:focus {
-            background-color: #2a2a2d;
-            color: #f1f1f1;
-            border-color: #444;
-        }
-
-        body.dark-theme .form-check-input {
-            background-color: #2a2a2d;
-            border-color: #555;
-        }
-
-        body.dark-theme .card {
-            background-color: #1e1e1e;
-            color: #f1f1f1;
-        }
-
-        body.dark-theme .text-danger {
-            color: #ff6b6b !important;
-        }
-
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-    </style>
-}
-
-<div class="container-fluid pt-4 fade-in">
-    <div class="page-header d-flex justify-content-between align-items-center">
-        <h2 class="mb-0">@ViewBag.Title</h2>
-        <a href="@Url.Action("ManageMenus", "Account")" class="btn btn-outline-light">
-            <i class="fas fa-list"></i> Back to List
-        </a>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="@Url.Action("ManageMenus", "Account")"
+               class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-arrow-left"></i> Back to Menus
+            </a>
+        </div>
     </div>
 
-    <div class="row">
+    <!-- FORM -->
+    <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
-            @{
-                string actionName = (Model != null && Model.MenuId > 0) ? "EditMenu" : "AddMenu";
-            }
 
-            @using (Html.BeginForm(actionName, "Account", FormMethod.Post, new { @class = "form-horizontal" }))
+            @using (Html.BeginForm(isEdit ? "EditMenu" : "AddMenu", "Account", FormMethod.Post))
             {
                 @Html.AntiForgeryToken()
 
-                if (Model != null && Model.MenuId > 0)
+                if (isEdit)
                 {
                     @Html.HiddenFor(m => m.MenuId)
                 }
@@ -110,30 +45,49 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
 
+                        <!-- MENU NAME -->
                         <div class="mb-3">
-                            @Html.LabelFor(m => m.MenuName, new { @class = "form-label" })
-                            @Html.TextBoxFor(m => m.MenuName, new { @class = "form-control theme-sensitive-text", placeholder = "Enter menu name (e.g., 'User Profile')" })
-                            @Html.ValidationMessageFor(m => m.MenuName, "", new { @class = "text-danger" })
+                            @Html.LabelFor(m => m.MenuName, new { @class = "form-label fw-semibold" })
+                            @Html.TextBoxFor(
+                                m => m.MenuName,
+                                new
+                                {
+                                    @class = "form-control",
+                                    placeholder = "Example: User Management"
+                                })
+                            @Html.ValidationMessageFor(m => m.MenuName, "", new { @class = "text-danger small" })
                         </div>
 
+                        <!-- MENU URL -->
                         <div class="mb-3">
-                            @Html.LabelFor(m => m.MenuURL, new { @class = "form-label" })
-                            @Html.TextBoxFor(m => m.MenuURL, new { @class = "form-control theme-sensitive-text", placeholder = "Enter URL (e.g., '/Account/Profile')" })
-                            @Html.ValidationMessageFor(m => m.MenuURL, "", new { @class = "text-danger" })
+                            @Html.LabelFor(m => m.MenuURL, new { @class = "form-label fw-semibold" })
+                            @Html.TextBoxFor(
+                                m => m.MenuURL,
+                                new
+                                {
+                                    @class = "form-control",
+                                    placeholder = "Example: /Account/Users"
+                                })
+                            @Html.ValidationMessageFor(m => m.MenuURL, "", new { @class = "text-danger small" })
                         </div>
 
-                        <div class="mb-3 form-check">
+                        <!-- ACTIVE -->
+                        <div class="form-check mb-4">
                             @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
-                            @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
+                            @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label fw-semibold" })
                         </div>
 
                         @Html.HiddenFor(m => m.IsDeleted)
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="submit" class="btn btn-primary me-md-2">
-                                @(Model != null && Model.MenuId > 0 ? "Update Menu" : "Add Menu")
+                        <!-- ACTION BUTTONS -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-success primary-action-btn">
+                                <i class="bi bi-save me-1"></i>
+                                @(isEdit ? "Update Menu" : "Create Menu")
                             </button>
-                            <a href="@Url.Action("ManageMenus", "Account")" class="btn btn-secondary">
+
+                            <a href="@Url.Action("ManageMenus", "Account")"
+                               class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                         </div>
@@ -141,24 +95,25 @@
                 </div>
             }
 
-            @if (Model != null && Model.MenuId > 0 && Model.CreatedDate.HasValue)
+            <!-- DETAILS (EDIT ONLY) -->
+            @if (isEdit && Model.CreatedDate.HasValue)
             {
-                <div class="card mt-3 shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mb-0">Menu Details</h5>
-                    </div>
+                <div class="card shadow-sm mt-4 fade-in">
                     <div class="card-body">
-                        <p><strong>Created:</strong> @Model.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm")</p>
-                        <p>
+                        <h6 class="mb-3 fw-semibold">
+                            <i class="bi bi-info-circle me-1"></i> Menu Information
+                        </h6>
+
+                        <p class="mb-1">
+                            <strong>Created On:</strong>
+                            @Model.CreatedDate.Value.ToString("dd MMM yyyy, HH:mm")
+                        </p>
+
+                        <p class="mb-0">
                             <strong>Status:</strong>
-                            @if (Model.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning text-dark">Inactive</span>
-                            }
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? "Active" : "Inactive")
+                            </span>
                         </p>
                     </div>
                 </div>

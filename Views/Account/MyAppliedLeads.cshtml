@@ -5,46 +5,8 @@
 }
 
 <style>
-    :root {
-        --gradient-start-light: #6a11cb;
-        --gradient-end-light: #2575fc;
-        --gradient-start-dark: #2575fc;
-        --gradient-end-dark: #6a11cb;
 
-        --text-light: #212529;
-        --text-dark: #f8f9fa;
 
-        --header-padding: 0.5rem 1rem;
-        --header-radius: 0.3rem;
-    }
-
-    @@media (prefers-color-scheme: dark) {
-        :root {
-            --gradient-start: var(--gradient-start-dark);
-            --gradient-end: var(--gradient-end-dark);
-            --text-color: var(--text-dark);
-        }
-    }
-    @@media (prefers-color-scheme: light), (forced-colors: none) {
-        :root {
-            --gradient-start: var(--gradient-start-light);
-            --gradient-end: var(--gradient-end-light);
-            --text-color: var(--text-light);
-        }
-    }
-
-    .page-header {
-        font-weight: 700;
-        font-size: 2rem;
-        background: linear-gradient(270deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
-        background-size: 600% 600%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: gradientShift 12s ease infinite;
-        padding: var(--header-padding);
-        border-radius: var(--header-radius);
-        user-select: none;
-    }
 
     @@keyframes gradientShift {
         0% { background-position: 0% 50%; }
@@ -72,12 +34,12 @@
     @if (userLeads.Count > 0)
     {
         <div class="card shadow-sm">
-            <div class="card-header bg-info text-white">
+            <div class="card-header bg-info ">
                 <strong><i class="fas fa-history me-2"></i> Lead Application History</strong>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0">
+                    <table class="custom-table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>

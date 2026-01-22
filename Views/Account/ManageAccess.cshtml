@@ -1,134 +1,76 @@
 ﻿@model List<CRM_Buddies_Task.Models.UserAccessInfo>
-@using CRM_Buddies_Task.Models
 
 @{
     ViewBag.Title = "Manage User Access";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section Styles {
-    <style>
-        .page-header {
-            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-            padding: 30px;
-            border-radius: 12px;
-            color: #fff;
-        }
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
 
-        body.dark-theme .page-header {
-            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
-        }
-
-        @@keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        @@keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .custom-table {
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .custom-table thead th {
-            background-color: #f8f9fa;
-            color: #212529;
-            font-weight: 600;
-        }
-
-        body.dark-theme .custom-table thead th {
-            background-color: #2a2a2d;
-            color: #fff;
-        }
-
-        .custom-table tbody tr {
-            transition: background 0.3s ease;
-        }
-
-        .custom-table tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        body.light-theme .custom-table tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.03);
-        }
-
-        .badge {
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-
-        body.dark-theme .badge.bg-secondary {
-            background-color: #6c757d;
-            color: #fff;
-        }
-
-        .card, .badge, .table, .custom-table thead, .custom-table tbody tr {
-            transition: background-color 0.4s ease, color 0.4s ease;
-        }
-    </style>
-}
-
-<div class="main-wrapper theme-sensitive-text pt-5 fade-in">
-    <div class="container-fluid">
-        <div class="row mb-4 align-items-center">
-            <div class="col">
-                <div class="page-header shadow-sm">
-                    <h2 class="display-6 mb-2">
-                        <i class="fas fa-users-cog me-2"></i> Manage User Access
-                    </h2>
-                    <p class="mb-0">Overview of user roles and menu permissions.</p>
-                </div>
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-shield-lock me-2"></i> User Access Overview
+                </h2>
+                <p class="mb-0">
+                    View user roles and their assigned menu permissions
+                </p>
             </div>
         </div>
+    </div>
 
-        <div class="table-responsive fade-in">
-            <table class="table table-hover custom-table">
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Accessible Menus</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
+    <!-- Table -->
+    <div class="table-responsive shadow-sm fade-in">
+        <table class="table-hover custom-table mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Menu Access</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int count = 1;
+                    foreach (var user in Model)
                     {
                         <tr>
-                            <td>@user.UserId</td>
+                            <td>@count</td>
                             <td>@user.FullName</td>
                             <td>@user.Email</td>
                             <td>
-                                <span class="badge @(user.RoleId == 2 ? "bg-success": "bg-info")">
+                                <span class="badge @(user.RoleId == 2 ? "bg-success" : "bg-info")">
                                     @user.RoleName
                                 </span>
                             </td>
                             <td>
-                                <span class="badge bg-secondary me-1">@user.MenuIds.Split(',').Length menus</span>
-                                <small class="text-muted d-block" title="@user.MenuNames">@user.MenuNames</small>
+                                <span class="badge bg-secondary access-count-badge">
+                                    @user.MenuIds.Split(',').Length Menus
+                                </span>
+                                <div class="access-menus mt-1" title="@user.MenuNames">
+                                    @user.MenuNames
+                                </div>
                             </td>
                         </tr>
+                        count++;
                     }
-                </tbody>
-            </table>
-        </div>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            No access records found
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
+
 </div>

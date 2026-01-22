@@ -5,94 +5,82 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section Styles {
-    <style>
-        .page-header {
-            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
-            background-size: 400% 400%;
-            animation: gradientShift 10s ease infinite;
-            padding: 20px 30px;
-            border-radius: 12px 12px 0 0;
-            color: #fff;
-        }
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
 
-        body.dark-theme .page-header {
-            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
-        }
-
-        @@keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Fade In */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        @@keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .btn-success:hover {
-            background-color: #198754;
-            box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
-        }
-
-        .btn-outline-warning:hover {
-            background-color: #ffc107;
-            color: #212529;
-        }
-    </style>
-}
-
-<div class="container mt-5 fade-in">
-    <div class="row justify-content-center">
+    <!-- HEADER -->
+    <div class="row mb-4 align-items-center">
         <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-folder-plus me-2"></i> Add New Project
+                </h2>
+                <p class="mb-0">
+                    Create a new project and make it available across the platform
+                </p>
+            </div>
+        </div>
 
-            <div class="card shadow border-0">
-                <div class="page-header">
-                    <h4 class="mb-0"><i class="bi bi-folder-plus me-2"></i> Add New Project</h4>
-                </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="@Url.Action("AllProjects", "Account")"
+               class="btn btn-outline-warning primary-action-btn">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to Projects
+            </a>
+        </div>
+    </div>
 
-                <div class="card-body">
+    <!-- FORM CARD -->
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <div class="card dashboard-card shadow-sm border-0 fade-in">
+                <div class="card-body p-4">
+
                     @using (Html.BeginForm("AddProject", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
                     {
                         @Html.AntiForgeryToken()
 
-                        <div class="mb-3">
+                        <div class="mb-4">
                             @Html.LabelFor(m => m.ProjectName, new { @class = "form-label fw-semibold" })
-                            @Html.TextBoxFor(m => m.ProjectName, new { @class = "form-control", placeholder = "Enter project name", required = "required" })
-                            @Html.ValidationMessageFor(m => m.ProjectName, "", new { @class = "text-danger" })
+                            @Html.TextBoxFor(m => m.ProjectName, new
+                            {
+                                @class = "form-control",
+                                placeholder = "Enter project name",
+                                required = "required"
+                            })
+                            @Html.ValidationMessageFor(m => m.ProjectName, "", new { @class = "text-danger small" })
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-4">
                             @Html.LabelFor(m => m.Description, new { @class = "form-label fw-semibold" })
-                            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 5, placeholder = "Project description...", required = "required" })
-                            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                            @Html.TextAreaFor(m => m.Description, new
+                            {
+                                @class = "form-control",
+                                rows = 5,
+                                placeholder = "Describe the project purpose and scope",
+                                required = "required"
+                            })
+                            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger small" })
                         </div>
 
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-1"></i> Add Project
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-success primary-action-btn">
+                                <i class="bi bi-check-circle me-1"></i> Save Project
                             </button>
-                            <a href="@Url.Action("AllProjects", "Account")" class="btn btn-outline-warning ms-2 text-dark">
-                                <i class="bi bi-arrow-left-circle me-1 text-dark"></i> Back
+
+                            <a href="@Url.Action("AllProjects", "Account")"
+                               class="btn btn-outline-secondary primary-action-btn">
+                                Cancel
                             </a>
                         </div>
                     }
+
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+
 
 @{
     var success = TempData["SuccessMessage"] ?? "";
