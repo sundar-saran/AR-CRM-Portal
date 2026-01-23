@@ -1,0 +1,76 @@
+﻿@model List<CRM_Buddies_Task.Models.UserAccessInfo>
+
+@{
+    ViewBag.Title = "Manage User Access";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
+
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-shield-lock me-2"></i> User Access Overview
+                </h2>
+                <p class="mb-0">
+                    View user roles and their assigned menu permissions
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive shadow-sm fade-in">
+        <table class="table-hover custom-table mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Menu Access</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int count = 1;
+                    foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@count</td>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>
+                                <span class="badge @(user.RoleId == 2 ? "bg-success" : "bg-info")">
+                                    @user.RoleName
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary access-count-badge">
+                                    @user.MenuIds.Split(',').Length Menus
+                                </span>
+                                <div class="access-menus mt-1" title="@user.MenuNames">
+                                    @user.MenuNames
+                                </div>
+                            </td>
+                        </tr>
+                        count++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            No access records found
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

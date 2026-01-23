@@ -1,0 +1,75 @@
+﻿@model List<CRM_Buddies_Task.Models.ProjectModel>
+
+@{
+    ViewBag.Title = "All Projects";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
+
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-kanban-fill me-2"></i> Project Management
+                </h2>
+                <p class="mb-0">
+                    View, manage, and update all projects in the system
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="@Url.Action("AddProject", "Account")"
+               class="btn btn-success primary-action-btn shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Add New Project
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive shadow-sm fade-in">
+        <table class="custom-table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Project Name</th>
+                    <th>Description</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    for (int i = 0; i < Model.Count; i++)
+                    {
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td class="fw-semibold">@Model[i].ProjectName</td>
+                            <td>@Model[i].Description</td>
+                            <td>@Model[i].CreatedDate</td>
+                            <td>
+                                <a href="@Url.Action("EditProject", "Account", new { id = Model[i].ProjectId })"
+                                   class="btn btn-sm btn-outline-primary table-action-btn"
+                                   title="Edit @Model[i].ProjectName">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            No projects available
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
