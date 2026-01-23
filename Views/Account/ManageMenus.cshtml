@@ -1,0 +1,144 @@
+﻿@model List<CRM_Buddies_Task.Models.MenuModel>
+
+@{
+    ViewBag.Title = "Manage Menus";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
+
+    <!-- HEADER -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-list-ul me-2"></i> Manage Menus
+                </h2>
+                <p class="mb-0">
+                    Create, edit and manage application navigation menus
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="@Url.Action("AddMenu", "Account")"
+               class="btn btn-success primary-action-btn shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Add New Menu
+            </a>
+        </div>
+    </div>
+
+    <!-- SUCCESS / ERROR MESSAGE -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success shadow-sm fade-in">
+            <i class="bi bi-check-circle me-1"></i>
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    else if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger shadow-sm fade-in">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- TABLE -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive shadow-sm fade-in">
+            <table class="table-hover custom-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Menu Name</th>
+                        <th>Menu URL</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var menu = Model[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td class="fw-semibold">@menu.MenuName</td>
+                            <td>
+                                <code>@menu.MenuURL</code>
+                            </td>
+                            <td>
+                                <span class="badge @(menu.IsActive ? "bg-success" : "bg-danger")">
+                                    @(menu.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                @(menu.CreatedDate?.ToString("dd MMM yyyy, HH:mm") ?? "N/A")
+                            </td>
+                            <td class="text-center">
+                                <a href="@Url.Action("EditMenu", "Account", new { id = menu.MenuId })"
+                                   class="btn btn-sm btn-outline-warning"
+                                   title="Edit Menu">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <!-- EMPTY STATE -->
+        <div class="alert alert-info text-center shadow-sm fade-in">
+            <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+            <h5>No menus found</h5>
+            <p class="mb-0 text-muted">
+                Click <strong>“Add New Menu”</strong> to create your first menu item.
+            </p>
+        </div>
+    }
+
+</div>
+
+@{
+    var success = TempData["SuccessMessage"] ?? "";
+    var error = TempData["ErrorMessage"] ?? "";
+}
+
+<script>
+    (function () {
+        var success = @Html.Raw(Json.Encode(success));
+        var error = @Html.Raw(Json.Encode(error));
+
+        function showPopup(msg, bgColor) {
+            if (!msg) return;
+            var popup = document.createElement('div');
+            popup.textContent = msg;
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.background = bgColor || '#4CAF50';
+            popup.style.color = '#fff';
+            popup.style.padding = '10px 14px';
+            popup.style.borderRadius = '6px';
+            popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            popup.style.zIndex = 99999;
+            popup.style.fontSize = '13px';
+            document.body.appendChild(popup);
+
+            setTimeout(function () {
+                popup.style.transition = "opacity 0.5s";
+                popup.style.opacity = 0;
+                setTimeout(function () { popup.remove(); }, 500);
+            }, 2000);
+        }
+
+        if (success) showPopup(success, '#4CAF50');
+        else if (error) showPopup(error, '#E53935');
+    })();
+</script>

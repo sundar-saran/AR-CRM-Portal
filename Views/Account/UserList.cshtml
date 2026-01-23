@@ -1,0 +1,131 @@
+﻿@model List<CRM_Buddies_Task.Models.UserDetails>
+
+@{
+    ViewBag.Title = "User List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid pt-4 theme-sensitive-text fade-in">
+
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="page-header shadow-sm">
+                <h2 class="mb-2">
+                    <i class="bi bi-people-fill me-2"></i> User Management
+                </h2>
+                <p class="mb-0">
+                    Manage registered users and their account status
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="@Url.Action("AddUser", "Account")"
+               class="btn btn-success primary-action-btn shadow-sm">
+                <i class="bi bi-person-plus-fill me-1"></i> Add New User
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive shadow-sm fade-in">
+        <table class="table-hover custom-table mb-0">
+            <thead>
+                <tr>
+                    <th>Sr. No.</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>City</th>
+                    <th>Status</th>
+                    <th>Created On</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    int count = 1;
+                    foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@count</td>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@user.Mobile</td>
+                            <td>@user.City</td>
+                            <td>
+                                @if (user.is_Active)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+                            <td>@user.Created_Date</td>
+                            <td class="text-center">
+                                <a href="@Url.Action("EditUser", "Account", new { id = user.User_ID })"
+                                   class="btn btn-sm btn-outline-primary table-action-btn"
+                                   title="Edit User">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        count++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            No users found
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@{
+    var success = TempData["SuccessMessage"] ?? "";
+    var error = TempData["ErrorMessage"] ?? "";
+}
+
+<script>
+    (function () {
+        var success = @Html.Raw(Json.Encode(success));
+        var error = @Html.Raw(Json.Encode(error));
+
+        function showPopup(msg, bgColor) {
+            if (!msg) return;
+            var popup = document.createElement('div');
+            popup.textContent = msg;
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.background = bgColor || '#4CAF50';
+            popup.style.color = '#fff';
+            popup.style.padding = '10px 14px';
+            popup.style.borderRadius = '6px';
+            popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            popup.style.zIndex = 99999;
+            popup.style.fontSize = '13px';
+            popup.style.transition = 'opacity 0.5s ease';
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.style.opacity = 0;
+                setTimeout(() => popup.remove(), 500);
+            }, 2000);
+        }
+
+        if (success) showPopup(success, '#4CAF50');
+        else if (error) showPopup(error, '#E53935');
+    })();
+</script>

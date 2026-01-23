@@ -1,0 +1,167 @@
+﻿@{
+    ViewBag.Title = "Apply For Lead";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var columns = ViewBag.Columns as List<CRM_Buddies_Task.Models.LeadColumnModel>;
+}
+
+<style>
+    :root {
+        --header-text-color-light: #222;
+        --header-text-color-dark: #eee;
+        --btn-outline-info-light: #0dcaf0;
+        --btn-outline-info-dark: #66d9ff;
+        --input-bg-light: #fff;
+        --input-bg-dark: #1e1e2f;
+        --input-border-light: #ced4da;
+        --input-border-dark: #444;
+        --textarea-bg-light: #fff;
+        --textarea-bg-dark: #1e1e2f;
+    }
+
+    [data-theme="dark"] {
+        --header-text-color: var(--header-text-color-dark);
+        --btn-outline-info: var(--btn-outline-info-dark);
+        --input-bg: var(--input-bg-dark);
+        --input-border: var(--input-border-dark);
+        --textarea-bg: var(--textarea-bg-dark);
+    }
+    :not([data-theme="dark"]) {
+        --header-text-color: var(--header-text-color-light);
+        --btn-outline-info: var(--btn-outline-info-light);
+        --input-bg: var(--input-bg-light);
+        --input-border: var(--input-border-light);
+        --textarea-bg: var(--textarea-bg-light);
+    }
+
+    .page-header {
+        position: relative;
+        padding: 1rem 1.5rem;
+        border-radius: 0.375rem;
+        color: var(--header-text-color);
+        background: linear-gradient(270deg, #6a11cb, #2575fc, #6a11cb, #2575fc);
+        background-size: 800% 800%;
+        animation: gradientAnimation 15s ease infinite, fadeIn 1.2s ease forwards;
+        margin-bottom: 1.5rem;
+        opacity: 0;
+    }
+
+    @@keyframes gradientAnimation {
+        0% {background-position: 0% 50%;}
+        50% {background-position: 100% 50%;}
+        100% {background-position: 0% 50%;}
+    }
+
+    @@keyframes fadeIn {
+        to {opacity: 1;}
+    }
+
+    input.form-control {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+        color: var(--header-text-color);
+    }
+    textarea.form-control {
+        background-color: var(--textarea-bg);
+        border-color: var(--input-border);
+        color: var(--header-text-color);
+    }
+    input.form-control::placeholder,
+    textarea.form-control::placeholder {
+        color: #6c757d;
+        opacity: 1;
+    }
+
+    .form-check-label {
+        color: var(--header-text-color);
+    }
+
+    .btn-outline-info {
+        color: var(--btn-outline-info);
+        border-color: var(--btn-outline-info);
+    }
+    .btn-outline-info:hover,
+    .btn-outline-info:focus {
+        background-color: var(--btn-outline-info);
+        color: #fff;
+    }
+</style>
+
+<div class="container pt-5">
+    <div class="d-flex justify-content-between align-items-center page-header">
+        <h2>📋 Apply for a Lead</h2>
+        <a href="@Url.Action("MyAppliedLeads", "Account")" class="btn btn-outline-info">
+            <i class="fas fa-eye me-1"></i> View My Applied Leads
+        </a>
+    </div>
+
+    @if (columns != null && columns.Count > 0)
+    {
+        <form method="post" action="@Url.Action("ApplyForLead", "Account")">
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                @foreach (var col in columns)
+                {
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">@col.ColumnName</label>
+
+                        @{
+                            string inputType = "text"; // Default
+                            string placeholder = $"Enter {col.ColumnName}";
+                            string dataType = col.DataType.ToLower();
+
+                            if (dataType.Contains("int") || dataType.Contains("decimal") || dataType.Contains("float") || dataType.Contains("number"))
+                            {
+                                inputType = "number";
+                            }
+                            else if (dataType.Contains("date"))
+                            {
+                                inputType = "date";
+                            }
+                            else if (dataType.Contains("bit") || dataType.Contains("bool"))
+                            {
+                                inputType = "checkbox";
+                            }
+                            else if (dataType.Contains("varchar(15)") || dataType.Contains("mobile"))
+                            {
+                                inputType = "tel";
+                                placeholder = "Enter mobile number";
+                            }
+                            else if (dataType.Contains("text"))
+                            {
+                                inputType = "textarea";
+                            }
+                        }
+
+                        @if (inputType == "checkbox")
+                        {
+                            <div class="form-check">
+                                <input type="checkbox" name="@col.ColumnName" class="form-check-input" value="true" />
+                                <input type="hidden" name="@col.ColumnName" value="false" />
+                                <label class="form-check-label">Yes</label>
+                            </div>
+                        }
+                        else if (inputType == "textarea")
+                        {
+                            <textarea name="@col.ColumnName" class="form-control" placeholder="@placeholder" rows="3"></textarea>
+                        }
+                        else
+                        {
+                            <input type="@inputType" name="@col.ColumnName" class="form-control" placeholder="@placeholder" required />
+                        }
+                    </div>
+                }
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">
+                <i class="fas fa-paper-plane"></i> Submit Application
+            </button>
+        </form>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            No columns found. Please contact the administrator.
+        </div>
+    }
+</div>

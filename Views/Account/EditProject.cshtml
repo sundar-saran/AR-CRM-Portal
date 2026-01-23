@@ -1,0 +1,164 @@
+﻿@model CRM_Buddies_Task.Models.ProjectModel
+
+@{
+    ViewBag.Title = "Edit Project";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            background: linear-gradient(270deg, #4ca1af, #c4e0e5);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            padding: 30px;
+            border-radius: 12px;
+            color: #fff;
+            margin-bottom: 2rem;
+        }
+
+        body.dark-theme .page-header {
+            background: linear-gradient(270deg, #1c1c1e, #2a2a2d);
+        }
+
+        @@keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-table {
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .custom-table thead th {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-weight: 600;
+            padding: 12px 15px;
+            border-bottom: 2px solid #dee2e6;
+            text-align: left;
+        }
+
+        body.dark-theme .custom-table thead th {
+            background-color: #2a2a2d;
+            color: #fff;
+            border-bottom-color: #444;
+        }
+
+        .custom-table tbody tr {
+            transition: background 0.3s ease;
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body.light-theme .custom-table tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        .btn-success:hover {
+            background-color: #198754;
+            box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
+        }
+
+        .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #212529;
+        }
+    </style>
+}
+
+<div class="container mt-5 fade-in">
+    <div class="page-header shadow-sm">
+        <h2 class="display-6 mb-0">
+            <i class="bi bi-folder2-open me-2"></i> Edit Project
+        </h2>
+        <p class="mb-0 text-white-50">Modify the details of your project here.</p>
+    </div>
+
+    @using (Html.BeginForm("EditProject", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ProjectId)
+
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.ProjectName)
+            @Html.TextBoxFor(m => m.ProjectName, new { @class = "form-control", required = "required", placeholder = "Enter project name" })
+            @Html.ValidationMessageFor(m => m.ProjectName, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.Description)
+            @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = 5, required = "required", placeholder = "Project description..." })
+            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+        </div>
+
+        <button type="submit" class="btn btn-success mt-3">
+            <i class="bi bi-check-circle me-1"></i> Update Project
+        </button>
+        <a href="@Url.Action("AllProjects", "Account")" class="btn btn-outline-warning ms-2 mt-3 text-dark">
+            <i class="bi bi-arrow-left-circle me-1 text-dark"></i> Back
+        </a>
+    }
+</div>
+
+@{
+    var success = TempData["SuccessMessage"] ?? "";
+    var error = TempData["ErrorMessage"] ?? "";
+}
+
+<script>
+    (function() {
+        var success = @Html.Raw(Json.Encode(success));
+        var error = @Html.Raw(Json.Encode(error));
+
+        function showPopup(msg, bgColor) {
+            if (!msg) return;
+            var popup = document.createElement('div');
+            popup.textContent = msg;
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.background = bgColor || '#4CAF50';
+            popup.style.color = '#fff';
+            popup.style.padding = '10px 14px';
+            popup.style.borderRadius = '6px';
+            popup.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            popup.style.zIndex = 99999;
+            popup.style.fontSize = '13px';
+            document.body.appendChild(popup);
+
+            setTimeout(function() {
+                popup.style.transition = "opacity 0.5s";
+                popup.style.opacity = 0;
+                setTimeout(function() { popup.remove(); }, 500);
+            }, 2000);
+        }
+
+        if (success) showPopup(success, '#4CAF50');
+        else if (error) showPopup(error, '#E53935');
+    })();
+</script>
