@@ -238,7 +238,6 @@
             top: 70px;
             right: 0;
             z-index: 1002;
-            background-color: #ffd700;
             color: #000;
             border: none;
             border-radius: 5px 0 0 5px;
@@ -904,11 +903,299 @@ body.dark-theme .inline-form .btn-update {
         box-shadow: 0 0 10px rgba(25, 135, 84, 0.4);
         transform: translateY(-1px);
     }
+/* ==========================
+   GLOBAL LOADER (ENTERPRISE)
+========================== */
+#globalLoader {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.96),
+        rgba(245, 247, 250, 0.96)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(6px);
+    animation: overlayFadeIn 0.35s ease-out;
+}
+
+body.dark-theme #globalLoader {
+    background: linear-gradient(
+        180deg,
+        rgba(16, 16, 18, 0.97),
+        rgba(28, 28, 30, 0.97)
+    );
+}
+
+/* ==========================
+   Loader Card
+========================== */
+.loader-content {
+    position: relative;
+    text-align: center;
+    padding: 32px 40px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    animation:
+        loaderFadeIn 0.45s ease-out,
+        floatSoft 3.2s ease-in-out infinite;
+}
+
+body.dark-theme .loader-content {
+    background: rgba(30, 30, 32, 0.88);
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ==========================
+   Spinner with Glow Ring
+========================== */
+.spinner {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 4px solid rgba(40, 167, 69, 0.18);
+    border-top-color: #28a745;
+    animation: spin 0.85s linear infinite;
+    margin: 0 auto 16px;
+}
+
+/* Glow ring */
+.spinner::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(40, 167, 69, 0.25),
+        transparent 65%
+    );
+    animation: glowPulse 1.8s ease-in-out infinite;
+}
+
+body.dark-theme .spinner {
+    border: 4px solid rgba(124, 209, 124, 0.2);
+    border-top-color: #7cd17c;
+}
+
+body.dark-theme .spinner::after {
+    background: radial-gradient(
+        circle,
+        rgba(124, 209, 124, 0.28),
+        transparent 65%
+    );
+}
+
+/* ==========================
+   Animated Loader Text
+========================== */
+.loader-content p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.45px;
+    color: #4a4a4a;
+    animation:
+        textReveal 0.6s ease-out forwards,
+        textBreath 2.2s ease-in-out infinite;
+    animation-delay: 0.2s;
+}
+
+body.dark-theme .loader-content p {
+    color: #d0d0d0;
+}
+
+/* Accent underline */
+.loader-content p::after {
+    content: "";
+    display: block;
+    height: 2px;
+    width: 36%;
+    margin: 10px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(40, 167, 69, 0.7),
+        transparent
+    );
+    animation: shimmerSlide 2.2s ease-in-out infinite;
+}
+
+body.dark-theme .loader-content p::after {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(124, 209, 124, 0.8),
+        transparent
+    );
+}
+
+/* ==========================
+   Animations
+========================== */
+@@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@@keyframes loaderFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@@keyframes floatSoft {
+    0%   { transform: translateY(0); }
+    50%  { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+}
+
+@@keyframes glowPulse {
+    0%   { opacity: 0.3; }
+    50%  { opacity: 0.7; }
+    100% { opacity: 0.3; }
+}
+
+@@keyframes textReveal {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@@keyframes textBreath {
+    0%   { opacity: 0.75; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.75; }
+}
+
+@@keyframes shimmerSlide {
+    0%   { opacity: 0.3; width: 30%; }
+    50%  { opacity: 1; width: 50%; }
+    100% { opacity: 0.3; width: 30%; }
+}
+
+    .action-btn {
+        border-radius:10px;
+        padding: 6px 9px;
+    }
+
+    body.light-theme .action-btn {
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+        body.light-theme .action-btn:hover {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+
+    body.dark-theme .action-btn {
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+
+        body.dark-theme .action-btn:hover {
+            background-color: #ffc107;
+            color: #000;
+        }
+    /* ==========================
+   GLOBAL BACK BUTTON (UI)
+========================== */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        border: 1px solid transparent;
+        background: rgba(0, 0, 0, 0.04);
+        color: #212529;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+        /* Hover */
+        .btn-back:hover {
+            background: rgba(0, 0, 0, 0.08);
+            color: #000;
+            transform: translateX(-3px);
+        }
+
+        /* Focus (accessibility) */
+        .btn-back:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        }
+
+        /* Icon styling */
+        .btn-back i {
+            font-size: 1.1rem;
+            transition: transform 0.25s ease;
+        }
+
+        .btn-back:hover i {
+            transform: translateX(-2px);
+        }
+
+    /* ==========================
+   DARK THEME
+========================== */
+    body.dark-theme .btn-back {
+        background: rgba(255, 255, 255, 0.06);
+        color: #e0e0e0;
+    }
+
+        body.dark-theme .btn-back:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+    /* Optional compact variant */
+    .btn-back.sm {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
 
 </style>
 </head>
 
 <body class="dark-theme">
+
+    <!-- GLOBAL LOADER -->
+    <div id="globalLoader">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p>Loading, please wait...</p>
+        </div>
+    </div>
+
 
     <div id="sidebar">
         <div class="text-center text-white mb-3">
@@ -925,7 +1212,7 @@ body.dark-theme .inline-form .btn-update {
     <nav class="navbar navbar-expand-lg fixed-top with-sidebar theme-sensitive-text">
         <div class="container-fluid">
 
-            <button class="btn btn-outline-light btn-sm me-3" id="sidebarToggle">
+            <button class="btn btn-sm me-3" id="sidebarToggle">
                 <i class="bi bi-list"></i>
             </button>
 
@@ -936,14 +1223,14 @@ body.dark-theme .inline-form .btn-update {
             <div class="ms-auto navbar-text theme-sensitive-text">
                 Welcome, <strong>@fullName</strong>
 
-                <button id="themeToggle" class="btn btn-outline-warning btn-sm ms-2">
+                <button id="themeToggle" class="btn btn-outline btn-sm ms-2 action-btn" title="Change Theme">
                     <i class="bi bi-sun-fill" id="themeIcon"></i>
                 </button>
 
                 @if (Session["UserId"] != null)
                 {
-                    <a href="@Url.Action("Logout", "Account")" class="btn btn-warning btn-sm rounded-pill ms-2">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                    <a href="@Url.Action("Logout", "Account")" class="btn btn-sm ms-2 action-btn" title="Logout">
+                        <i class="bi bi-box-arrow-right"></i>
                     </a>
                 }
             </div>
@@ -987,7 +1274,7 @@ body.dark-theme .inline-form .btn-update {
         </div>
     </div>
 
-    <button id="settingsToggle" class="settings-toggle">
+    <button id="settingsToggle" class="settings-toggle action-btn" title="Setting">
         <i class="bi bi-gear-fill"></i>
     </button>
 
@@ -997,248 +1284,273 @@ body.dark-theme .inline-form .btn-update {
 
     @RenderSection("Scripts", required: false)
 
+
+
     <script>
-    (function () {
-        try {
-            let savedTheme = localStorage.getItem('theme');
-
-            if (!savedTheme) {
-                const cookieMatch = document.cookie.match(/theme=([^;]+)/);
-                if (cookieMatch && cookieMatch[1]) {
-                    savedTheme = cookieMatch[1];
-                    localStorage.setItem('theme', savedTheme);
-                }
-            }
-
-            savedTheme = savedTheme || 'dark';
-            document.documentElement.className = savedTheme + '-theme';
-        } catch (error) {
-            console.error('Error loading theme:', error);
-            document.documentElement.className = 'dark-theme';
-        }
-    })();
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const toggleBtn = document.getElementById("themeToggle");
-        const themeIcon = document.getElementById("themeIcon");
-        const sidebar = document.getElementById("sidebar");
-        const sidebarToggle = document.getElementById("sidebarToggle");
-        const mainContent = document.getElementById("main-content");
-        const navbar = document.querySelector('.navbar');
-        const settingsToggle = document.getElementById("settingsToggle");
-        const settingsPanel = document.getElementById("settingsPanel");
-        const closeSettings = document.getElementById("closeSettings");
-        const applySettings = document.getElementById("applySettings");
-        const resetSettings = document.getElementById("resetSettings");
-        const fontFamily = document.getElementById("fontFamily");
-        const fontSize = document.getElementById("fontSize");
-
-        // Theme functions
-        function setTheme(theme) {
+        (function () {
             try {
-                if (theme === "light") {
-                    document.body.classList.add("light-theme");
-                    document.body.classList.remove("dark-theme");
-                    if (themeIcon) {
-                        themeIcon.classList.remove("bi-moon-fill");
-                        themeIcon.classList.add("bi-sun-fill");
-                    }
-                } else {
-                    document.body.classList.add("dark-theme");
-                    document.body.classList.remove("light-theme");
-                    if (themeIcon) {
-                        themeIcon.classList.remove("bi-sun-fill");
-                        themeIcon.classList.add("bi-moon-fill");
-                    }
-                }
-
-                localStorage.setItem("theme", theme);
-                document.cookie = "theme=" + theme + "; path=/; max-age=" + (365 * 24 * 60 * 60);
-            } catch (error) {
-                console.error('Error setting theme:', error);
-            }
-        }
-
-        function loadTheme() {
-            try {
-                let savedTheme = localStorage.getItem("theme");
+                let savedTheme = localStorage.getItem('theme');
 
                 if (!savedTheme) {
                     const cookieMatch = document.cookie.match(/theme=([^;]+)/);
                     if (cookieMatch && cookieMatch[1]) {
                         savedTheme = cookieMatch[1];
-                        localStorage.setItem("theme", savedTheme);
+                        localStorage.setItem('theme', savedTheme);
                     }
                 }
 
-                return savedTheme || "dark";
+                savedTheme = savedTheme || 'dark';
+                document.documentElement.className = savedTheme + '-theme';
             } catch (error) {
                 console.error('Error loading theme:', error);
-                return "dark";
+                document.documentElement.className = 'dark-theme';
             }
-        }
+        })();
 
-        function toggleSettingsPanel() {
-            if (settingsPanel) {
-                const isOpen = settingsPanel.classList.toggle("open");
-                localStorage.setItem("settingsOpen", isOpen ? "true" : "false");
-            }
-        }
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById("themeToggle");
+            const themeIcon = document.getElementById("themeIcon");
+            const sidebar = document.getElementById("sidebar");
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const mainContent = document.getElementById("main-content");
+            const navbar = document.querySelector('.navbar');
+            const settingsToggle = document.getElementById("settingsToggle");
+            const settingsPanel = document.getElementById("settingsPanel");
+            const closeSettings = document.getElementById("closeSettings");
+            const applySettings = document.getElementById("applySettings");
+            const resetSettings = document.getElementById("resetSettings");
+            const fontFamily = document.getElementById("fontFamily");
+            const fontSize = document.getElementById("fontSize");
 
-        function applyTextSettings() {
-            try {
-                const family = fontFamily ? fontFamily.value : "Arial, sans-serif";
-                const size = fontSize ? fontSize.value : "16px";
-
-                document.body.style.fontFamily = family;
-                document.body.style.fontSize = size;
-
-                if (mainContent) {
-                    mainContent.style.fontFamily = family;
-                    mainContent.style.fontSize = size;
-                }
-
-                localStorage.setItem("fontFamily", family);
-                localStorage.setItem("fontSize", size);
-
-                document.cookie = "fontFamily=" + family + "; path=/; max-age=" + (365 * 24 * 60 * 60);
-                document.cookie = "fontSize=" + size + "; path=/; max-age=" + (365 * 24 * 60 * 60);
-
-                console.log("Text settings applied:", family, size);
-            } catch (error) {
-                console.error('Error applying text settings:', error);
-            }
-        }
-
-        function resetTextSettings() {
-            try {
-                const defaultFamily = "Arial, sans-serif";
-                const defaultSize = "16px";
-
-                if (fontFamily) fontFamily.value = defaultFamily;
-                if (fontSize) fontSize.value = defaultSize;
-
-                document.body.style.fontFamily = defaultFamily;
-                document.body.style.fontSize = defaultSize;
-
-                if (mainContent) {
-                    mainContent.style.fontFamily = defaultFamily;
-                    mainContent.style.fontSize = defaultSize;
-                }
-
-                localStorage.removeItem("fontFamily");
-                localStorage.removeItem("fontSize");
-
-                document.cookie = "fontFamily=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                document.cookie = "fontSize=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-
-                console.log("Text settings reset to default");
-            } catch (error) {
-                console.error('Error resetting text settings:', error);
-            }
-        }
-
-        function loadTextSettings() {
-            try {
-                let savedFamily = localStorage.getItem("fontFamily");
-                let savedSize = localStorage.getItem("fontSize");
-
-                if (!savedFamily) {
-                    const cookieMatch = document.cookie.match(/fontFamily=([^;]+)/);
-                    if (cookieMatch && cookieMatch[1]) {
-                        savedFamily = cookieMatch[1];
+            // Theme functions
+            function setTheme(theme) {
+                try {
+                    if (theme === "light") {
+                        document.body.classList.add("light-theme");
+                        document.body.classList.remove("dark-theme");
+                        if (themeIcon) {
+                            themeIcon.classList.remove("bi-moon-fill");
+                            themeIcon.classList.add("bi-sun-fill");
+                        }
+                    } else {
+                        document.body.classList.add("dark-theme");
+                        document.body.classList.remove("light-theme");
+                        if (themeIcon) {
+                            themeIcon.classList.remove("bi-sun-fill");
+                            themeIcon.classList.add("bi-moon-fill");
+                        }
                     }
-                }
 
-                if (!savedSize) {
-                    const cookieMatch = document.cookie.match(/fontSize=([^;]+)/);
-                    if (cookieMatch && cookieMatch[1]) {
-                        savedSize = cookieMatch[1];
+                    localStorage.setItem("theme", theme);
+                    document.cookie = "theme=" + theme + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+                } catch (error) {
+                    console.error('Error setting theme:', error);
+                }
+            }
+
+            function loadTheme() {
+                try {
+                    let savedTheme = localStorage.getItem("theme");
+
+                    if (!savedTheme) {
+                        const cookieMatch = document.cookie.match(/theme=([^;]+)/);
+                        if (cookieMatch && cookieMatch[1]) {
+                            savedTheme = cookieMatch[1];
+                            localStorage.setItem("theme", savedTheme);
+                        }
                     }
+
+                    return savedTheme || "dark";
+                } catch (error) {
+                    console.error('Error loading theme:', error);
+                    return "dark";
+                }
+            }
+
+            function toggleSettingsPanel() {
+                if (settingsPanel) {
+                    const isOpen = settingsPanel.classList.toggle("open");
+                    localStorage.setItem("settingsOpen", isOpen ? "true" : "false");
+                }
+            }
+
+            function applyTextSettings() {
+                try {
+                    const family = fontFamily ? fontFamily.value : "Arial, sans-serif";
+                    const size = fontSize ? fontSize.value : "16px";
+
+                    document.body.style.fontFamily = family;
+                    document.body.style.fontSize = size;
+
+                    if (mainContent) {
+                        mainContent.style.fontFamily = family;
+                        mainContent.style.fontSize = size;
+                    }
+
+                    localStorage.setItem("fontFamily", family);
+                    localStorage.setItem("fontSize", size);
+
+                    document.cookie = "fontFamily=" + family + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+                    document.cookie = "fontSize=" + size + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+
+                    console.log("Text settings applied:", family, size);
+                } catch (error) {
+                    console.error('Error applying text settings:', error);
+                }
+            }
+
+            function resetTextSettings() {
+                try {
+                    const defaultFamily = "Arial, sans-serif";
+                    const defaultSize = "16px";
+
+                    if (fontFamily) fontFamily.value = defaultFamily;
+                    if (fontSize) fontSize.value = defaultSize;
+
+                    document.body.style.fontFamily = defaultFamily;
+                    document.body.style.fontSize = defaultSize;
+
+                    if (mainContent) {
+                        mainContent.style.fontFamily = defaultFamily;
+                        mainContent.style.fontSize = defaultSize;
+                    }
+
+                    localStorage.removeItem("fontFamily");
+                    localStorage.removeItem("fontSize");
+
+                    document.cookie = "fontFamily=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "fontSize=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+                    console.log("Text settings reset to default");
+                } catch (error) {
+                    console.error('Error resetting text settings:', error);
+                }
+            }
+
+            function loadTextSettings() {
+                try {
+                    let savedFamily = localStorage.getItem("fontFamily");
+                    let savedSize = localStorage.getItem("fontSize");
+
+                    if (!savedFamily) {
+                        const cookieMatch = document.cookie.match(/fontFamily=([^;]+)/);
+                        if (cookieMatch && cookieMatch[1]) {
+                            savedFamily = cookieMatch[1];
+                        }
+                    }
+
+                    if (!savedSize) {
+                        const cookieMatch = document.cookie.match(/fontSize=([^;]+)/);
+                        if (cookieMatch && cookieMatch[1]) {
+                            savedSize = cookieMatch[1];
+                        }
+                    }
+
+                    if (savedFamily) {
+                        document.body.style.fontFamily = savedFamily;
+                        if (mainContent) mainContent.style.fontFamily = savedFamily;
+                        if (fontFamily) fontFamily.value = savedFamily;
+                    }
+
+                    if (savedSize) {
+                        document.body.style.fontSize = savedSize;
+                        if (mainContent) mainContent.style.fontSize = savedSize;
+                        if (fontSize) fontSize.value = savedSize;
+                    }
+                } catch (error) {
+                    console.error('Error loading text settings:', error);
+                }
+            }
+
+            function toggleSidebar() {
+                if (sidebar && mainContent && navbar) {
+                    const isHidden = sidebar.classList.toggle("hidden");
+                    mainContent.classList.toggle("full-width");
+                    navbar.classList.toggle("no-sidebar");
+                    navbar.classList.toggle("with-sidebar");
+                    localStorage.setItem("sidebarHidden", isHidden ? "true" : "false");
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener("click", function () {
+                    const currentTheme = document.body.classList.contains("light-theme") ? "light" : "dark";
+                    const newTheme = currentTheme === "light" ? "dark" : "light";
+                    setTheme(newTheme);
+                });
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener("click", toggleSidebar);
+            }
+
+            if (settingsToggle) {
+                settingsToggle.addEventListener("click", toggleSettingsPanel);
+            }
+
+            if (closeSettings) {
+                closeSettings.addEventListener("click", toggleSettingsPanel);
+            }
+
+            if (applySettings) {
+                applySettings.addEventListener("click", applyTextSettings);
+            }
+
+            if (resetSettings) {
+                resetSettings.addEventListener("click", resetTextSettings);
+            }
+
+            // Load all settings on page load
+            try {
+                const savedTheme = loadTheme();
+                const sidebarHidden = localStorage.getItem("sidebarHidden") === "true";
+                const settingsOpen = localStorage.getItem("settingsOpen") === "true";
+
+                setTheme(savedTheme);
+                loadTextSettings();
+
+                // Apply sidebar state
+                if (sidebarHidden && sidebar && mainContent && navbar) {
+                    sidebar.classList.add("hidden");
+                    mainContent.classList.add("full-width");
+                    navbar.classList.add("no-sidebar");
+                    navbar.classList.remove("with-sidebar");
                 }
 
-                if (savedFamily) {
-                    document.body.style.fontFamily = savedFamily;
-                    if (mainContent) mainContent.style.fontFamily = savedFamily;
-                    if (fontFamily) fontFamily.value = savedFamily;
+                // Apply settings panel state
+                if (settingsOpen && settingsPanel) {
+                    settingsPanel.classList.add("open");
                 }
 
-                if (savedSize) {
-                    document.body.style.fontSize = savedSize;
-                    if (mainContent) mainContent.style.fontSize = savedSize;
-                    if (fontSize) fontSize.value = savedSize;
-                }
+                console.log("All settings loaded successfully");
             } catch (error) {
-                console.error('Error loading text settings:', error);
+                console.error('Error loading settings:', error);
             }
-        }
-
-        function toggleSidebar() {
-            if (sidebar && mainContent && navbar) {
-                const isHidden = sidebar.classList.toggle("hidden");
-                mainContent.classList.toggle("full-width");
-                navbar.classList.toggle("no-sidebar");
-                navbar.classList.toggle("with-sidebar");
-                localStorage.setItem("sidebarHidden", isHidden ? "true" : "false");
-            }
-        }
-
-        if (toggleBtn) {
-            toggleBtn.addEventListener("click", function () {
-                const currentTheme = document.body.classList.contains("light-theme") ? "light" : "dark";
-                const newTheme = currentTheme === "light" ? "dark" : "light";
-                setTheme(newTheme);
-            });
-        }
-
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener("click", toggleSidebar);
-        }
-
-        if (settingsToggle) {
-            settingsToggle.addEventListener("click", toggleSettingsPanel);
-        }
-
-        if (closeSettings) {
-            closeSettings.addEventListener("click", toggleSettingsPanel);
-        }
-
-        if (applySettings) {
-            applySettings.addEventListener("click", applyTextSettings);
-        }
-
-        if (resetSettings) {
-            resetSettings.addEventListener("click", resetTextSettings);
-        }
-
-        // Load all settings on page load
-        try {
-            const savedTheme = loadTheme();
-            const sidebarHidden = localStorage.getItem("sidebarHidden") === "true";
-            const settingsOpen = localStorage.getItem("settingsOpen") === "true";
-
-            setTheme(savedTheme);
-            loadTextSettings();
-
-            // Apply sidebar state
-            if (sidebarHidden && sidebar && mainContent && navbar) {
-                sidebar.classList.add("hidden");
-                mainContent.classList.add("full-width");
-                navbar.classList.add("no-sidebar");
-                navbar.classList.remove("with-sidebar");
-            }
-
-            // Apply settings panel state
-            if (settingsOpen && settingsPanel) {
-                settingsPanel.classList.add("open");
-            }
-
-            console.log("All settings loaded successfully");
-        } catch (error) {
-            console.error('Error loading settings:', error);
-        }
-    });
+        });
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loader = document.getElementById("globalLoader");
+
+            setTimeout(() => {
+                loader.style.display = "none";
+            }, 300);
+        });
+
+        document.addEventListener("click", function (e) {
+            const target = e.target.closest("a, button");
+
+            if (target && target.tagName === "A" && target.getAttribute("href")) {
+                document.getElementById("globalLoader").style.display = "flex";
+            }
+        });
+
+        document.addEventListener("submit", function () {
+            document.getElementById("globalLoader").style.display = "flex";
+        });
+    </script>
+
 
 </body>
 </html>

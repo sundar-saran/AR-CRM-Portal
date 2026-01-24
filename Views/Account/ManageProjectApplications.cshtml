@@ -136,7 +136,7 @@
                                 @Html.AntiForgeryToken()
                                 @Html.Hidden("userProjectId", app.UserProjectId)
                                 @Html.Hidden("status", "Assigned")
-                                <button type="submit" class="btn btn-sm btn-outline-primary table-action-btn">Assign</button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary action-btn">Assign</button>
                             }
                         }
                         else if (app.Status == "Assigned")
@@ -146,7 +146,7 @@
                                 @Html.AntiForgeryToken()
                                 @Html.Hidden("userProjectId", app.UserProjectId)
                                 @Html.Hidden("status", "Pending")
-                                <button type="submit" class="btn btn-sm btn-outline-primary table-action-btn">Unassign</button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary action-btn">Unassign</button>
                             }
                         }
                         else

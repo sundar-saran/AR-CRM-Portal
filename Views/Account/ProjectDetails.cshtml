@@ -22,12 +22,7 @@
             }
         }
 
-        @@keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        
 
         .card {
             border-radius: 12px;
@@ -86,7 +81,7 @@
             {
                 <p class="card-text"><strong>Created On:</strong> @Model.CreatedDate.Value.ToString("dd MMM yyyy")</p>
             }
-            <a href="@Url.Action("YourProjects", "Account")" class="btn btn-secondary mt-3">Back to Projects</a>
+            <a href="@Url.Action("YourProjects", "Account")" class="btn-back">Back to Projects</a>
         </div>
     </div>
 </div>

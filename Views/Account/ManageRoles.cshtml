@@ -53,7 +53,8 @@
                             <td>@Model[i].Email</td>
                             <td>@Model[i].Mobile</td>
                             <td>
-                                <span class="badge bg-info">
+                                @*<span class="badge bg-info">*@
+                                <span class="badge @(Model[i].RoleName == "Admin" ? "bg-success" : "bg-info")">
                                     @Model[i].RoleName
                                 </span>
                             </td>
